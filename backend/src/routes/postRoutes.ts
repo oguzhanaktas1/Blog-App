@@ -7,10 +7,11 @@ import {
   deletePost,
 } from "../controllers/postController";
 import { validatePost } from "../middlewares/postValidation";
+import { authenticateToken } from "../middlewares/authMiddleware";
 
 const router = express.Router();
 
-router.post("/", validatePost, createPost);
+router.post("/", authenticateToken, validatePost, createPost);
 router.get("/", getAllPosts);
 router.get("/:id", getPostById);
 router.put("/:id", validatePost, updatePost);

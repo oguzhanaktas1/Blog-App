@@ -1,10 +1,11 @@
-import { Request, Response, NextFunction, RequestHandler } from "express";
+import { Request, Response, NextFunction } from "express";
 import { PrismaClient } from "@prisma/client";
 import { validationResult } from "express-validator";
+import { AuthRequest } from "../middlewares/authMiddleware";
 
 const prisma = new PrismaClient();
 
-export const getAllPosts: RequestHandler = async (req, res, next) => {
+export const getAllPosts = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const posts = await prisma.post.findMany();
     res.json(posts);
@@ -13,7 +14,7 @@ export const getAllPosts: RequestHandler = async (req, res, next) => {
   }
 };
 
-export const getPostById: RequestHandler = async (req, res, next) => {
+export const getPostById = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const id = Number(req.params.id);
     const post = await prisma.post.findUnique({ where: { id } });
@@ -27,16 +28,18 @@ export const getPostById: RequestHandler = async (req, res, next) => {
   }
 };
 
-export const createPost: RequestHandler = async (req, res, next) => {
+export const createPost = async (req: AuthRequest, res: Response, next: NextFunction) => {
+  // artık req.userId'yi tanıyor olacak TS
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     res.status(400).json({ errors: errors.array() });
     return;
   }
   try {
-    const { title, content, authorId } = req.body;
+    const { title, content } = req.body;
+    const authorId = req.userId!;
     const newPost = await prisma.post.create({
-      data: { title, content, authorId },
+      data: { title, content, authorId},
     });
     res.status(201).json(newPost);
   } catch (error) {
@@ -44,7 +47,7 @@ export const createPost: RequestHandler = async (req, res, next) => {
   }
 };
 
-export const updatePost: RequestHandler = async (req, res, next) => {
+export const updatePost = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const id = Number(req.params.id);
     const { title, content } = req.body;
@@ -58,7 +61,7 @@ export const updatePost: RequestHandler = async (req, res, next) => {
   }
 };
 
-export const deletePost: RequestHandler = async (req, res, next) => {
+export const deletePost = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const id = Number(req.params.id);
     await prisma.post.delete({ where: { id } });
