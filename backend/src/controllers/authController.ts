@@ -17,7 +17,7 @@ export const signup = async (req: Request, res: Response, next: NextFunction) =>
       data: { name, email, password: hashedPassword },
     });
 
-    const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: "1d" });
+    const token = jwt.sign({ userId: user.id, role: user.role }, JWT_SECRET, { expiresIn: "1d" });
     res.status(201).json({ token, user: { id: user.id, name: user.name, email: user.email } });
   } catch (err) {
     console.error(err);
@@ -34,7 +34,11 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) return res.status(400).json({ error: "Invalid credentials" });
 
-    const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: "1d" });
+    const token = jwt.sign(
+      { userId: user.id, role: user.role },
+      JWT_SECRET,
+      { expiresIn: "1d" }
+    );
     res.json({ token, user: { id: user.id, name: user.name, email: user.email } });
   } catch (err) {
     console.error(err);

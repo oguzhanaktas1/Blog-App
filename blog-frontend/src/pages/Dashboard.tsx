@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { Box, Heading, Text, Button, Center } from "@chakra-ui/react";
+import { Box, Heading, Text, Button, Center, Flex } from "@chakra-ui/react";
 import { useNavigate } from "react-router-dom";
 import NewPostForm from "./NewPostForm";
 
@@ -26,9 +26,13 @@ const Dashboard = () => {
   }
 
   return (
-    <Box>
-      <NewPostForm />
-    </Box>
+    <Flex minH="100vh" minW="99vw" width="100vw" align="center" justify="center" bg={"gray.50"} p={{ base: 4, md: 8 }}>
+      <Box w="100vw" minW="100vw" maxW="100vw" bg="white" p={{ base: 6, md: 10 }} borderRadius="none" boxShadow="none" textAlign="center" display="flex" flexDirection="column" alignItems="center" justifyContent="center">
+        <Box maxW={{ base: "xs", sm: "md", md: "lg", xl: "2xl" }} w="100%">
+          <NewPostForm />
+        </Box>
+      </Box>
+    </Flex>
   );
 };
 

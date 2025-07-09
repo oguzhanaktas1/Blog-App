@@ -24,9 +24,9 @@ export default function SignupPage() {
   };
 
   const handleSubmit = async () => {
-    setIsLoading(true); // Yüklemeyi başlat
+    setIsLoading(true);
     try {
-      const res = await signup(form); // 'res' tipini auth.ts'de tanımlamayı unutmayın!
+      const res = await signup(form);
       localStorage.setItem("token", res.token);
       toast({
         title: "Kayıt Başarılı",
@@ -46,82 +46,90 @@ export default function SignupPage() {
         isClosable: true,
       });
     } finally {
-      setIsLoading(false); // Yüklemeyi bitir
+      setIsLoading(false);
     }
   };
 
   return (
     <Flex
       minH="100vh"
-      width="100%"
+      minW="99vw"
+      width="100vw"
       align="center"
       justify="center"
-      bgGradient="linear(to-br, teal.400, blue.600)" // Login sayfasıyla aynı gradyan
-      p={4}
+      bgGradient="linear(to-br, teal.400, blue.600)"
+      p={{ base: 4, md: 8 }}
     >
       <Box
-        maxW={{ base: "xs", sm: "md" }}
-        w="full"
+        w="100vw"
+        minW="100vw"
+        maxW="100vw"
         bg="white"
-        p={{ base: 6, md: 8 }}
-        borderRadius="lg"
-        boxShadow="xl"
+        p={{ base: 6, md: 10 }}
+        borderRadius="none"
+        boxShadow="none"
         textAlign="center"
+        display="flex"
+        flexDirection="column"
+        alignItems="center"
+        justifyContent="center"
       >
-        <Heading mb={6} fontSize={{ base: "2xl", md: "3xl" }} color="gray.800">
-          Kayıt Ol
-        </Heading>
-        <Text mb={4} color="gray.600">
-          Yeni bir hesap oluşturmak için bilgilerinizi girin.
-        </Text>
-        <VStack spacing={4}>
-          <Input
-            placeholder="Adınız Soyadınız"
-            name="name"
-            value={form.name}
-            onChange={handleChange}
-            size="lg"
-            variant="filled"
-            _focus={{ borderColor: "teal.500", boxShadow: "0 0 0 1px teal.500" }}
-          />
-          <Input
-            placeholder="E-posta Adresiniz"
-            name="email"
-            type="email"
-            value={form.email}
-            onChange={handleChange}
-            size="lg"
-            variant="filled"
-            _focus={{ borderColor: "teal.500", boxShadow: "0 0 0 1px teal.500" }}
-          />
-          <Input
-            placeholder="Şifreniz"
-            name="password"
-            type="password"
-            value={form.password}
-            onChange={handleChange}
-            size="lg"
-            variant="filled"
-            _focus={{ borderColor: "teal.500", boxShadow: "0 0 0 1px teal.500" }}
-          />
-          <Button
-            colorScheme="teal"
-            size="lg"
-            width="full"
-            onClick={handleSubmit}
-            isLoading={isLoading}
-            _hover={{ bg: "teal.500" }}
-            _active={{ bg: "teal.600" }}
-          >
+        <Box maxW={{ base: "xs", sm: "md", md: "lg", xl: "2xl" }} w="100%">
+          <Heading mb={6} fontSize={{ base: "2xl", md: "3xl" }} color="gray.800">
             Kayıt Ol
-          </Button>
-        </VStack>
-        <Text mt={6} color="gray.600" fontSize="sm">
-          Zaten hesabınız var mı?{" "}
-          <ChakraLink as={RouterLink} to="/login" color="teal.500" fontWeight="bold">
-            Giriş Yapın
-          </ChakraLink>
-        </Text>
+          </Heading>
+          <Text mb={4} color="gray.600">
+            Yeni bir hesap oluşturmak için bilgilerinizi girin.
+          </Text>
+          <VStack spacing={4}>
+            <Input
+              placeholder="Adınız Soyadınız"
+              name="name"
+              value={form.name}
+              onChange={handleChange}
+              size="lg"
+              variant="filled"
+              _focus={{ borderColor: "teal.500", boxShadow: "0 0 0 1px teal.500" }}
+            />
+            <Input
+              placeholder="E-posta Adresiniz"
+              name="email"
+              type="email"
+              value={form.email}
+              onChange={handleChange}
+              size="lg"
+              variant="filled"
+              _focus={{ borderColor: "teal.500", boxShadow: "0 0 0 1px teal.500" }}
+            />
+            <Input
+              placeholder="Şifreniz"
+              name="password"
+              type="password"
+              value={form.password}
+              onChange={handleChange}
+              size="lg"
+              variant="filled"
+              _focus={{ borderColor: "teal.500", boxShadow: "0 0 0 1px teal.500" }}
+            />
+            <Button
+              colorScheme="teal"
+              size="lg"
+              width="full"
+              onClick={handleSubmit}
+              isLoading={isLoading}
+              _hover={{ bg: "teal.500" }}
+              _active={{ bg: "teal.600" }}
+            >
+              Kayıt Ol
+            </Button>
+          </VStack>
+          <Text mt={6} color="gray.600" fontSize="sm">
+            Zaten hesabınız var mı?{" "}
+            <ChakraLink as={RouterLink} to="/login" color="teal.500" fontWeight="bold">
+              Giriş Yapın
+            </ChakraLink>
+          </Text>
+        </Box>
       </Box>
     </Flex>
   );

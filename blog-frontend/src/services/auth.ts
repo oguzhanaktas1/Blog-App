@@ -1,6 +1,5 @@
 import axios from "../utils/axios";
 
-// You can replace 'any' with a specific user type if you have one
 type User = {
   id: number;
   name: string;

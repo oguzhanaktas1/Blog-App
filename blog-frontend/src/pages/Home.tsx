@@ -15,9 +15,17 @@ import {
   IconButton,
   Tooltip,
   useBreakpointValue,
+  useDisclosure,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalCloseButton,
+  ModalBody,
 } from "@chakra-ui/react";
 import { AddIcon } from "@chakra-ui/icons";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import NewPostForm from "./NewPostForm";
 
 interface Post {
   id: number;
@@ -28,10 +36,11 @@ interface Post {
 const Home = () => {
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
-
   const bg = useColorModeValue("white", "gray.800");
   const boxShadow = useColorModeValue("md", "dark-lg");
   const gridCols = useBreakpointValue({ base: 1, sm: 2, md: 2, lg: 3 });
+  const { isOpen, onOpen, onClose } = useDisclosure();
+  const navigate = useNavigate();
 
   useEffect(() => {
     api
@@ -51,8 +60,17 @@ const Home = () => {
       });
   }, []);
 
+  const handleCreatePost = () => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      navigate("/signup");
+    } else {
+      onOpen();
+    }
+  };
+
   return (
-    <Box minH="100vh" minW="100vw" bg={useColorModeValue("gray.50", "gray.900")}>
+    <Box minH="100vh" minW="99vw" bg={useColorModeValue("gray.50", "gray.900")}>
       {/* Hero Section */}
       <Box
         as="section"
@@ -72,11 +90,16 @@ const Home = () => {
         maxW="100vw"
       >
         <Box maxW="container.xl" mx="auto" px={{ base: 4, md: 0 }}>
-          <Heading fontWeight="extrabold" fontSize={{ base: "3xl", md: "5xl" }} mb={4}>
+          <Heading
+            fontWeight="extrabold"
+            fontSize={{ base: "3xl", md: "5xl" }}
+            mb={4}
+          >
             Welcome to the Modern Blog
           </Heading>
           <Text fontSize={{ base: "md", md: "xl" }} maxW="2xl" mx="auto">
-            Discover, create, and share your thoughts with the world. Start by reading the latest posts or add your own!
+            Discover, create, and share your thoughts with the world. Start by
+            reading the latest posts or add your own!
           </Text>
         </Box>
       </Box>
@@ -86,19 +109,33 @@ const Home = () => {
           {/* Loading State */}
           {loading ? (
             <Flex justify="center" mt={20} minH="40vh">
-              <Spinner size="xl" thickness="4px" speed="0.8s" color="teal.400" />
+              <Spinner
+                size="xl"
+                thickness="4px"
+                speed="0.8s"
+                color="teal.400"
+              />
             </Flex>
           ) : posts.length === 0 ? (
             <Flex direction="column" align="center" mt={16} minH="40vh">
               <Text fontSize="2xl" color="gray.500" mb={4}>
                 No posts available. Be the first to share your story!
               </Text>
-              <Button as={Link} to="/new" colorScheme="teal" leftIcon={<AddIcon />}>
+              <Button
+                colorScheme="teal"
+                leftIcon={<AddIcon />}
+                onClick={handleCreatePost}
+              >
                 Create Post
               </Button>
             </Flex>
           ) : (
-            <SimpleGrid columns={gridCols} spacing={8} w="100%" minChildWidth="280px">
+            <SimpleGrid
+              columns={gridCols}
+              spacing={8}
+              w="100%"
+              minChildWidth="280px"
+            >
               {posts.map((post) => (
                 <Box
                   key={post.id}
@@ -107,7 +144,11 @@ const Home = () => {
                   boxShadow={boxShadow}
                   borderRadius="xl"
                   transition="all 0.2s"
-                  _hover={{ boxShadow: "xl", transform: "translateY(-6px) scale(1.02)", cursor: "pointer" }}
+                  _hover={{
+                    boxShadow: "xl",
+                    transform: "translateY(-6px) scale(1.02)",
+                    cursor: "pointer",
+                  }}
                   display="flex"
                   flexDirection="column"
                   minH="260px"
@@ -117,11 +158,21 @@ const Home = () => {
                     <Heading fontSize={{ base: "lg", md: "xl" }} noOfLines={1}>
                       {post.title}
                     </Heading>
-                    <Badge colorScheme="teal" fontSize="0.8em" px={2} py={1} borderRadius="md">
+                    <Badge
+                      colorScheme="teal"
+                      fontSize="0.8em"
+                      px={2}
+                      py={1}
+                      borderRadius="md"
+                    >
                       New
                     </Badge>
                   </Flex>
-                  <Text noOfLines={4} color={useColorModeValue("gray.700", "gray.300")} mb={4}>
+                  <Text
+                    noOfLines={4}
+                    color={useColorModeValue("gray.700", "gray.300")}
+                    mb={4}
+                  >
                     {post.content}
                   </Text>
                   <Button
@@ -146,8 +197,6 @@ const Home = () => {
       {/* Floating Action Button for New Post */}
       <Tooltip label="Create New Post" hasArrow placement="left">
         <IconButton
-          as={Link}
-          to="/new"
           icon={<AddIcon />}
           colorScheme="teal"
           size="lg"
@@ -159,8 +208,21 @@ const Home = () => {
           zIndex={100}
           aria-label="Create New Post"
           display={{ base: "flex", md: "none" }}
+          onClick={handleCreatePost}
         />
       </Tooltip>
+
+      {/* Modal for New Post Form */}
+      <Modal isOpen={isOpen} onClose={onClose} size="xl" isCentered>
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>Create New Post</ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>
+            <NewPostForm />
+          </ModalBody>
+        </ModalContent>
+      </Modal>
     </Box>
   );
 };
