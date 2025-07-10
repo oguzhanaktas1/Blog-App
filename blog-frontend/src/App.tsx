@@ -9,6 +9,7 @@ import Navbar from "./components/Navbar";
 import { useEffect, useState } from "react";
 import UsersList from "./pages/admin/UsersList";
 import UserDetail from "./pages/admin/UserDetail";
+import CreatePostPage from "./pages/CreatePostPage";
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -25,13 +26,11 @@ function App() {
           <Route path="/" element={<Home />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/signup" element={<SignupPage />} />
-          <Route
-            path="/login"
-            element={<LoginPage setIsLoggedIn={setIsLoggedIn} />}
-          />
+          <Route path="/login" element={<LoginPage setIsLoggedIn={setIsLoggedIn} />} />
           <Route path="/admin" element={<AdminDashboard />} />
           <Route path="/admin/users" element={<UsersList />} />
           <Route path="/admin/users/:id" element={<UserDetail />} />
+          <Route path="/create-post" element={<CreatePostPage />} />
         </Routes>
       </Router>
     </ChakraProvider>

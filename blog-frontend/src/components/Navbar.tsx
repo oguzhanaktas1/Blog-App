@@ -58,6 +58,18 @@ export default function Navbar({ isLoggedIn, setIsLoggedIn }: NavbarProps) {
             Admin Panel
           </Button>
         )}
+        <Button
+          as={Link}
+          to="/create-post"
+          variant="ghost"
+          color="white"
+          fontWeight="bold"
+          px={2}
+          ml={4}
+          _hover={{ bg: "teal.500" }}
+        >
+          Create Post
+        </Button>
       </Box>
 
       <Spacer />

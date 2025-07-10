@@ -10,8 +10,4 @@ export const validatePost = [
   body("content")
     .notEmpty()
     .withMessage("Content is required"),
-
-  body("authorId")
-    .isInt()
-    .withMessage("authorId must be an integer"),
 ];

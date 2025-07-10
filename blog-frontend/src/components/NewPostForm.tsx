@@ -18,8 +18,9 @@ const NewPostForm = () => {
   const [content, setContent] = useState("");
   const toast = useToast();
   const navigate = useNavigate();
-
+  
   const handleSubmit = async (e: React.FormEvent) => {
+    console.log("Base URL:", import.meta.env.VITE_API_BASE_URL);
     e.preventDefault();
 
     try {

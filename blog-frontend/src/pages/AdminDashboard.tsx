@@ -107,7 +107,7 @@ export default function AdminDashboard() {
     <Flex
       direction="column"
       minH="100vh"
-      minW="99vw"
+      minW="100vw"
       bg={useColorModeValue("gray.50", "gray.900")}
     >
       {/* Hero Banner */}

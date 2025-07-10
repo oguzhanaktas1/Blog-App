@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { Box, Heading, Text, Button, Center, Flex } from "@chakra-ui/react";
 import { useNavigate } from "react-router-dom";
-import NewPostForm from "./NewPostForm";
+import NewPostForm from "../components/NewPostForm";
 
 const Dashboard = () => {
   const navigate = useNavigate();
