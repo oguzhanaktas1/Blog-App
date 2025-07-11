@@ -10,26 +10,42 @@ import {
   useToast,
 } from "@chakra-ui/react";
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom"; // ⬅️ yönlendirme için ekle
 import api from "../api/axios";
 
-const NewPostForm = () => {
+export interface Post {
+  id: number;
+  title: string;
+  content: string;
+  createdAt?: string | number | Date;
+  author?: {
+    id: number;
+    name: string;
+    email: string;
+  };
+}
+
+interface NewPostFormProps {
+  onSuccess?: (newPost: Post) => void;
+  onClose?: () => void;
+}
+
+const NewPostForm = ({ onSuccess, onClose }: NewPostFormProps) => {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const toast = useToast();
-  const navigate = useNavigate();
-  
-  const handleSubmit = async (e: React.FormEvent) => {
-    console.log("Base URL:", import.meta.env.VITE_API_BASE_URL);
-    e.preventDefault();
+  const navigate = useNavigate(); // ⬅️ buraya ekle
 
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     try {
       const token = localStorage.getItem("token");
-      await api.post(
+      const response = await api.post<Post>(
         "/posts",
         { title, content },
         token ? { headers: { Authorization: `Bearer ${token}` } } : undefined
       );
+
       toast({
         title: "Post created.",
         description: "Your post was successfully created.",
@@ -37,7 +53,14 @@ const NewPostForm = () => {
         duration: 3000,
         isClosable: true,
       });
-      navigate("/");
+
+      if (onSuccess) onSuccess(response.data);
+      if (onClose) onClose();
+
+      setTitle("");
+      setContent("");
+
+      navigate("/"); // ✅ başarılıysa anasayfaya yönlendir
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
       toast({

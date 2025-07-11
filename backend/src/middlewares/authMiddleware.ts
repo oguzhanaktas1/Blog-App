@@ -60,7 +60,8 @@ export const authorizeRole = (role: string) => {
 
 export const authMiddleware = (req: AuthRequest, res: Response, next: NextFunction) => {
   const authHeader = req.headers.authorization;
-
+  console.log("authHeader:", authHeader); // 🔍 Bunu ekle
+  
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
     return res.status(401).json({ error: "Token bulunamadı" });
   }

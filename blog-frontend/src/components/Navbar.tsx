@@ -1,6 +1,8 @@
-import { Flex, Box, Button, Spacer } from "@chakra-ui/react";
+import { Flex, Box, Button, Spacer, Avatar, Menu, MenuButton, MenuList, MenuItem, MenuDivider, Text } from "@chakra-ui/react";
 import { Link, useNavigate } from "react-router-dom";
 import { getUserRole } from "../utils/getUserRole";
+import { getUserInfo } from "../utils/getUserInfo";
+import { FaUserCircle } from "react-icons/fa";
 
 type NavbarProps = {
   isLoggedIn: boolean;
@@ -9,6 +11,7 @@ type NavbarProps = {
 
 export default function Navbar({ isLoggedIn, setIsLoggedIn }: NavbarProps) {
   const navigate = useNavigate();
+  const userInfo = getUserInfo();
 
   const handleLogout = () => {
     localStorage.removeItem("token");
@@ -98,14 +101,45 @@ export default function Navbar({ isLoggedIn, setIsLoggedIn }: NavbarProps) {
             </Button>
           </>
         ) : (
-          <Button
-            colorScheme="whiteAlpha"
-            variant="solid"
-            _hover={{ bg: "whiteAlpha.400" }}
-            onClick={handleLogout}
-          >
-            Logout
-          </Button>
+          <Menu>
+            <MenuButton
+              as={Button}
+              variant="ghost"
+              p={0}
+              minW={0}
+              _hover={{}}
+              _active={{}}
+              _focus={{ boxShadow: "none" }}
+            >
+              <Avatar
+                icon={<FaUserCircle style={{ width: "70%", height: "70%" }} />}
+                name={userInfo.name || undefined}
+                size="md"
+                bg="gray.200"
+                color="teal.600"
+                overflow="hidden"
+              />
+            </MenuButton>
+            <MenuList color="gray.800" minW="220px">
+              <Box px={4} py={3} textAlign="center">
+                <Avatar
+                  icon={<FaUserCircle style={{ width: "70%", height: "70%" }} />}
+                  name={userInfo.name || undefined}
+                  size="lg"
+                  mb={2}
+                  bg="gray.200"
+                  color="teal.600"
+                  overflow="hidden"
+                />
+                <Text fontWeight="bold">{userInfo.name || "Kullanıcı"}</Text>
+                <Text fontSize="sm" color="gray.500">{userInfo.email || "-"}</Text>
+              </Box>
+              <MenuDivider />
+              <MenuItem color="red.500" onClick={handleLogout} justifyContent="center">
+                Logout
+              </MenuItem>
+            </MenuList>
+          </Menu>
         )}
       </Box>
     </Flex>

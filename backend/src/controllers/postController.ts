@@ -79,12 +79,11 @@ export const updatePost = async (
 
     const post = await prisma.post.findUnique({ where: { id } });
 
-    if (!post) {
-      res.status(404).json({ error: "Post bulunamadı" });
-      return;  // burada return; ile fonksiyonu sonlandırıyoruz
-    }
+    const isOwner = post?.authorId === req.userId;
+    const isAdmin = req.userRole === "admin";
+    console.log("userId:", req.userId, "role:", req.userRole);
 
-    if (post.authorId !== req.userId && req.userRole !== "admin") {
+    if (!post || (!isOwner && !isAdmin)) {
       res.status(403).json({ error: "Yetkisiz işlem" });
       return;
     }
@@ -94,11 +93,12 @@ export const updatePost = async (
       data: { title, content },
     });
 
-    res.status(200).json(updated);
+    res.json(updated);
   } catch (error) {
     next(error);
   }
 };
+
 
 
 export const deletePost = async (
@@ -110,12 +110,11 @@ export const deletePost = async (
     const id = Number(req.params.id);
     const post = await prisma.post.findUnique({ where: { id } });
 
-    if (!post) {
-      res.status(404).json({ error: "Post bulunamadı" });
-      return;
-    }
+    const isOwner = post?.authorId === req.userId;
+    const isAdmin = req.userRole === "admin";
+    console.log("userId:", req.userId, "role:", req.userRole);
 
-    if (post.authorId !== req.userId && req.userRole !== "admin") {
+    if (!post || (!isOwner && !isAdmin)) {
       res.status(403).json({ error: "Yetkisiz işlem" });
       return;
     }

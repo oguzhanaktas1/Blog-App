@@ -117,19 +117,19 @@ const Home = () => {
   const renderPostMenu = (post: Post) => {
     const userEmail = getUserEmail();
     const userRole = getUserRole();
-  
+
     const isAdmin = userRole === "admin";
     const isPostOwner = userEmail === post.author?.email;
-  
+
     // 🟩 DEBUG logları
     console.log("User role:", userRole);
     console.log("User email:", userEmail);
     console.log("Post author email:", post.author?.email);
     console.log("isAdmin:", isAdmin);
     console.log("isPostOwner:", isPostOwner);
-  
+
     const canModify = isAdmin || isPostOwner;
-  
+
     return (
       <Menu>
         <MenuButton
@@ -174,7 +174,6 @@ const Home = () => {
       </Menu>
     );
   };
-  
 
   return (
     <Box
@@ -234,24 +233,17 @@ const Home = () => {
           ) : posts.length === 0 ? (
             <Flex direction="column" align="center" mt={16} minH="40vh">
               <Text fontSize="2xl" color="gray.500" mb={4}>
-                Henüz hiç gönderi yok. İlk hikayeni paylaşan sen ol!
+                Henüz hiç gönderi yok.
               </Text>
-              <Button
-                colorScheme="teal"
-                leftIcon={<AddIcon />}
-                onClick={handleCreatePost}
-              >
-                Gönderi Oluştur
-              </Button>
             </Flex>
           ) : (
             <VStack
               spacing={8}
               w="100%"
-              align="stretch" // İçerideki Box'ların tam genişliği kaplamasını sağlar
-              py={8} // Üst ve alt padding ekleyelim
+              align="stretch"
+              py={8}
             >
-              {posts.map((post) => (
+              {posts.slice().reverse().map((post) => (
                 <Box
                   key={post.id}
                   p={6}
@@ -261,14 +253,14 @@ const Home = () => {
                   transition="all 0.2s"
                   _hover={{
                     boxShadow: "xl",
-                    transform: "translateY(-6px) scale(1.00)", // Sadece yukarı kayma efekti, scale yok
+                    transform: "translateY(-6px) scale(1.00)",
                     cursor: "pointer",
                   }}
                   display="flex"
                   flexDirection="column"
-                  // minH="260px" // Tek sütunlu düzende minH'ye genelde gerek kalmaz, içerik kadar uzar
+                 
                   w="100%"
-                  // onClick={() => navigate(`/posts/${post.id}`)} // Tıklanabilir hale getirmek için
+                 
                 >
                   <Flex justify="space-between" align="center" mb={3}>
                     {/* Heading sola hizalı */}
@@ -304,34 +296,6 @@ const Home = () => {
                       {renderPostMenu(post)}
                     </Flex>
                   </Flex>
-
-                  <Modal
-                    isOpen={isEditOpen}
-                    onClose={onEditClose}
-                    size="xl"
-                    isCentered
-                  >
-                    <ModalOverlay />
-                    <ModalContent>
-                      <ModalHeader>Postu Güncelle</ModalHeader>
-                      <ModalCloseButton />
-                      <ModalBody>
-                        {editingPost && (
-                          <UpdatePostForm
-                            post={editingPost}
-                            onClose={onEditClose}
-                            onSuccess={() => {
-                              setEditingPost(null);
-                              // Postları tekrar fetch edelim
-                              api.get<Post[]>("/posts").then((res) => {
-                                setPosts(res.data);
-                              });
-                            }}
-                          />
-                        )}
-                      </ModalBody>
-                    </ModalContent>
-                  </Modal>
 
                   <Text fontSize="sm" color="gray.500" mb={2}>
                     by {post.author?.name ?? "Bilinmiyor"} -{" "}
@@ -387,7 +351,6 @@ const Home = () => {
       <Modal isOpen={isOpen} onClose={onClose} size="xl" isCentered>
         <ModalOverlay />
         <ModalContent>
-          <ModalHeader>Create New Post</ModalHeader>
           <ModalCloseButton />
           <ModalBody>
             <NewPostForm />
@@ -395,6 +358,7 @@ const Home = () => {
         </ModalContent>
       </Modal>
       {/* Postu Güncell Modalı */}
+
       <Modal isOpen={isEditOpen} onClose={onEditClose} size="xl" isCentered>
         <ModalOverlay />
         <ModalContent>
@@ -405,12 +369,11 @@ const Home = () => {
               <UpdatePostForm
                 post={editingPost}
                 onClose={onEditClose}
-                onSuccess={() => {
+                onSuccess={(updatedPost) => {
                   setEditingPost(null);
-                  // Postları tekrar fetch edelim
-                  // api.get<Post[]>("/posts").then((res) => { setPosts(res.data); });
-                  // Daha önceki fetchPosts fonksiyonunu yeniden çağırabilirsiniz:
-                  // getPosts(); // Eğer getPosts fonksiyonu kapsamdaysa
+                  setPosts((prev: Post[]) =>
+                    prev.map((p) => (p.id === updatedPost.id ? { ...p, ...updatedPost } : p))
+                  );
                 }}
               />
             )}

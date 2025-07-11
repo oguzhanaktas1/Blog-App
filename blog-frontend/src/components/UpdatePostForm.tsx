@@ -19,7 +19,7 @@ import {
       content: string;
     };
     onClose: () => void;
-    onSuccess: () => void;
+    onSuccess: (updatedPost: { id: number; title: string; content: string }) => void;
   }
   
   const UpdatePostForm = ({ post, onClose, onSuccess }: Props) => {
@@ -31,18 +31,22 @@ import {
       e.preventDefault();
       try {
         const token = localStorage.getItem("token");
-        await api.put(
+        const response = await api.put(
           `/posts/${post.id}`,
           { title, content },
           { headers: { Authorization: `Bearer ${token}` } }
         );
+    
+        const updatedPost = response.data as { id: number; title: string; content: string };
+    
         toast({
           title: "Post güncellendi.",
           status: "success",
           duration: 3000,
           isClosable: true,
         });
-        onSuccess();
+    
+        onSuccess(updatedPost); // ✅ burada gönder
         onClose();
       } catch (error) {
         toast({
@@ -54,6 +58,7 @@ import {
         });
       }
     };
+    
   
     return (
       <Box as="form" onSubmit={handleUpdate}>
