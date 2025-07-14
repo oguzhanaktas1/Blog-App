@@ -9,13 +9,18 @@ import {
   Link as ChakraLink,
   useToast,
   Flex,
+  InputGroup,
+  InputRightElement,
+  IconButton,
 } from "@chakra-ui/react";
 import { signup } from "../services/auth";
 import { useNavigate, Link as RouterLink } from "react-router-dom";
+import { ViewIcon, ViewOffIcon } from "@chakra-ui/icons";
 
 export default function SignupPage() {
   const [form, setForm] = useState({ name: "", email: "", password: "" });
-  const [isLoading, setIsLoading] = useState(false); // Yükleme durumu için state
+  const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false); // Şifre gösterme durumu
   const navigate = useNavigate();
   const toast = useToast();
 
@@ -49,6 +54,8 @@ export default function SignupPage() {
       setIsLoading(false);
     }
   };
+
+  const toggleShowPassword = () => setShowPassword((show) => !show);
 
   return (
     <Flex
@@ -101,16 +108,30 @@ export default function SignupPage() {
               variant="filled"
               _focus={{ borderColor: "teal.500", boxShadow: "0 0 0 1px teal.500" }}
             />
-            <Input
-              placeholder="Şifreniz"
-              name="password"
-              type="password"
-              value={form.password}
-              onChange={handleChange}
-              size="lg"
-              variant="filled"
-              _focus={{ borderColor: "teal.500", boxShadow: "0 0 0 1px teal.500" }}
-            />
+
+            {/* Şifre input'u InputGroup ile sarmalanıyor */}
+            <InputGroup size="lg" variant="filled" w="100%">
+              <Input
+                placeholder="Şifreniz"
+                name="password"
+                type={showPassword ? "text" : "password"}
+                value={form.password}
+                onChange={handleChange}
+                _focus={{ borderColor: "teal.500", boxShadow: "0 0 0 1px teal.500" }}
+              />
+              <InputRightElement>
+                <IconButton
+                  aria-label={showPassword ? "Şifreyi gizle" : "Şifreyi göster"}
+                  icon={showPassword ? <ViewOffIcon /> : <ViewIcon />}
+                  onClick={toggleShowPassword}
+                  variant="ghost"
+                  size="sm"
+                  _hover={{ bg: "transparent" }}
+                  _active={{ bg: "transparent" }}
+                />
+              </InputRightElement>
+            </InputGroup>
+
             <Button
               colorScheme="teal"
               size="lg"

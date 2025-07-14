@@ -10,23 +10,13 @@ import {
   useToast,
 } from "@chakra-ui/react";
 import { useState } from "react";
-import { useNavigate } from "react-router-dom"; // ⬅️ yönlendirme için ekle
-import api from "../api/axios";
-
-export interface Post {
-  id: number;
-  title: string;
-  content: string;
-  createdAt?: string | number | Date;
-  author?: {
-    id: number;
-    name: string;
-    email: string;
-  };
-}
+import { useNavigate } from "react-router-dom";
+import { useDispatch } from "react-redux";
+import type { AppDispatch } from "../store";
+import { addPostThunk } from "../store/slices/postsSlice";
 
 interface NewPostFormProps {
-  onSuccess?: (newPost: Post) => void;
+  onSuccess?: () => void;
   onClose?: () => void;
 }
 
@@ -34,35 +24,35 @@ const NewPostForm = ({ onSuccess, onClose }: NewPostFormProps) => {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const toast = useToast();
-  const navigate = useNavigate(); // ⬅️ buraya ekle
+  const navigate = useNavigate();
+  const dispatch = useDispatch<AppDispatch>();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
     try {
-      const token = localStorage.getItem("token");
-      const response = await api.post<Post>(
-        "/posts",
-        { title, content },
-        token ? { headers: { Authorization: `Bearer ${token}` } } : undefined
-      );
+      const result = await dispatch(addPostThunk({ title, content }));
 
-      toast({
-        title: "Post created.",
-        description: "Your post was successfully created.",
-        status: "success",
-        duration: 3000,
-        isClosable: true,
-      });
+      if (addPostThunk.fulfilled.match(result)) {
+        toast({
+          title: "Post created.",
+          description: "Your post was successfully created.",
+          status: "success",
+          duration: 3000,
+          isClosable: true,
+        });
 
-      if (onSuccess) onSuccess(response.data);
-      if (onClose) onClose();
+        setTitle("");
+        setContent("");
 
-      setTitle("");
-      setContent("");
+        if (onSuccess) onSuccess();
+        if (onClose) onClose();
 
-      navigate("/"); // ✅ başarılıysa anasayfaya yönlendir
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    } catch (error) {
+        navigate("/");
+      } else {
+        throw new Error("Creation failed");
+      }
+    } catch {
       toast({
         title: "Error",
         description: "Failed to create post.",

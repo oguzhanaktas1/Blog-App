@@ -1,6 +1,5 @@
 /* eslint-disable react-hooks/rules-of-hooks */
 import { useEffect, useState } from "react";
-import api from "../api/axios";
 import {
   Box,
   Heading,
@@ -31,54 +30,36 @@ import { FiMoreVertical } from "react-icons/fi";
 import { AddIcon } from "@chakra-ui/icons";
 import { Link, useNavigate } from "react-router-dom";
 import NewPostForm from "../components/NewPostForm";
-import { getUserEmail } from "../utils/getUserEmail";
 import UpdatePostForm from "../components/UpdatePostForm";
+import { getUserEmail } from "../utils/getUserEmail";
 import { getUserRole } from "../utils/getUserRole";
 
-interface Post {
-  id: number;
-  title: string;
-  content: string;
-  createdAt: string | number | Date;
-  author: {
-    id: number;
-    name: string;
-    email: string;
-  };
-}
+// Redux
+import { useDispatch, useSelector } from "react-redux";
+import { fetchPostsThunk, deletePostThunk, updatePostThunk } from "../store/slices/postsSlice";
+import type { RootState, AppDispatch } from "../store";
 
 const Home = () => {
-  const [posts, setPosts] = useState<Post[]>([]);
-  const [loading, setLoading] = useState(true);
-  const bg = useColorModeValue("white", "gray.800");
-  const boxShadow = useColorModeValue("md", "dark-lg");
-  const { isOpen, onOpen, onClose } = useDisclosure();
+  const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
   const toast = useToast();
-  const [editingPost, setEditingPost] = useState<Post | null>(null);
+  const bg = useColorModeValue("white", "gray.800");
+  const boxShadow = useColorModeValue("md", "dark-lg");
+  const posts = useSelector((state: RootState) => state.posts.posts);
+  const loading = useSelector((state: RootState) => state.posts.loading);
+
+  const { isOpen, onOpen, onClose } = useDisclosure();
   const {
     isOpen: isEditOpen,
     onOpen: onEditOpen,
     onClose: onEditClose,
   } = useDisclosure();
 
+  const [editingPost, setEditingPost] = useState<typeof posts[0] | null>(null);
+
   useEffect(() => {
-    api
-      .get("/posts")
-      .then((res) => {
-        if (Array.isArray(res.data)) {
-          setPosts(res.data);
-        } else {
-          setPosts([]);
-        }
-        setLoading(false);
-      })
-      .catch((err) => {
-        console.error("Error fetching posts:", err);
-        setPosts([]);
-        setLoading(false);
-      });
-  }, []);
+    dispatch(fetchPostsThunk());
+  }, [dispatch]);
 
   const handleCreatePost = () => {
     const token = localStorage.getItem("token");
@@ -89,24 +70,21 @@ const Home = () => {
     }
   };
 
+  
   const handleDelete = async (postId: number) => {
-    try {
-      const token = localStorage.getItem("token");
-      await api.delete(`/posts/${postId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setPosts((prev) => prev.filter((p) => p.id !== postId));
+    const result = await dispatch(deletePostThunk(postId));
+  
+    if (deletePostThunk.fulfilled.match(result)) {
       toast({
         title: "Post silindi.",
         status: "success",
         duration: 3000,
         isClosable: true,
       });
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    } catch (err) {
+    } else {
       toast({
         title: "Silme başarısız",
-        description: "Bu postu silemedik.",
+        description: result.payload || "Bu postu silemedik.",
         status: "error",
         duration: 3000,
         isClosable: true,
@@ -114,20 +92,12 @@ const Home = () => {
     }
   };
 
-  const renderPostMenu = (post: Post) => {
+  const renderPostMenu = (post: typeof posts[0]) => {
     const userEmail = getUserEmail();
     const userRole = getUserRole();
 
     const isAdmin = userRole === "admin";
     const isPostOwner = userEmail === post.author?.email;
-
-    // 🟩 DEBUG logları
-    console.log("User role:", userRole);
-    console.log("User email:", userEmail);
-    console.log("Post author email:", post.author?.email);
-    console.log("isAdmin:", isAdmin);
-    console.log("isPostOwner:", isPostOwner);
-
     const canModify = isAdmin || isPostOwner;
 
     return (
@@ -176,11 +146,7 @@ const Home = () => {
   };
 
   return (
-    <Box
-      minH="100vh"
-      minW="100vw"
-      bg={useColorModeValue("gray.50", "gray.900")}
-    >
+    <Box minH="100vh" minW="100vw" bg={useColorModeValue("gray.50", "gray.900")}>
       {/* Hero Section */}
       <Box
         as="section"
@@ -200,35 +166,21 @@ const Home = () => {
         maxW="100vw"
       >
         <Box maxW="container.xl" mx="auto" px={{ base: 4, md: 0 }}>
-          <Heading
-            fontWeight="extrabold"
-            fontSize={{ base: "3xl", md: "5xl" }}
-            mb={4}
-          >
+          <Heading fontWeight="extrabold" fontSize={{ base: "3xl", md: "5xl" }} mb={4}>
             Welcome to the Modern Blog
           </Heading>
           <Text fontSize={{ base: "md", md: "xl" }} maxW="2xl" mx="auto">
-            Discover, create, and share your thoughts with the world. Start by
-            reading the latest posts or add your own!
+            Discover, create, and share your thoughts with the world. Start by reading the latest posts or add your own!
           </Text>
         </Box>
       </Box>
-      {/* Create Posts and Showing Posts  */}
+
+      {/* Create Posts and Showing Posts */}
       <Box w="100vw" p={0}>
-        <Container
-          maxW="container.xl" // Büyük ekranlarda varsayılan max genişlik
-          px={{ base: 4, md: "20%" }} // Küçük ekranlarda 4, orta ve büyük ekranlarda %20 boşluk
-          // minW="100vw" // Bu prop'u kaldırdık, çünkü px ile boşluk vereceğiz ve maxW yeterli
-        >
-          {/* Loading State */}
+        <Container maxW="container.xl" px={{ base: 4, md: "20%" }}>
           {loading ? (
             <Flex justify="center" mt={20} minH="40vh">
-              <Spinner
-                size="xl"
-                thickness="4px"
-                speed="0.8s"
-                color="teal.400"
-              />
+              <Spinner size="xl" thickness="4px" speed="0.8s" color="teal.400" />
             </Flex>
           ) : posts.length === 0 ? (
             <Flex direction="column" align="center" mt={16} minH="40vh">
@@ -237,12 +189,7 @@ const Home = () => {
               </Text>
             </Flex>
           ) : (
-            <VStack
-              spacing={8}
-              w="100%"
-              align="stretch"
-              py={8}
-            >
+            <VStack spacing={8} w="100%" align="stretch" py={8}>
               {posts.slice().reverse().map((post) => (
                 <Box
                   key={post.id}
@@ -258,59 +205,31 @@ const Home = () => {
                   }}
                   display="flex"
                   flexDirection="column"
-                 
                   w="100%"
-                 
                 >
                   <Flex justify="space-between" align="center" mb={3}>
-                    {/* Heading sola hizalı */}
-                    <Heading
-                      fontSize={{ base: "lg", md: "xl" }}
-                      noOfLines={1}
-                      flex="1"
-                      mr={4}
-                    >
+                    <Heading fontSize={{ base: "lg", md: "xl" }} noOfLines={1} flex="1" mr={4}>
                       {post.title}
                     </Heading>
-
-                    {/* Sağdaki elementleri içeren Flex kapsayıcı */}
-                    {/* Bu Flex, Badge ve Menu'yü yan yana tutar ve ana Flex içinde sağa itilir */}
                     <Flex align="center" gap={2}>
-                      {" "}
-                      {/* gap ile Badge ve Menu arasında boşluk */}
-                      {/* Yeni badge */}
-                      {new Date().getTime() -
-                        new Date(post.createdAt).getTime() <
-                        24 * 60 * 60 * 1000 && (
-                        <Badge
-                          colorScheme="teal"
-                          fontSize="0.8em"
-                          px={2}
-                          py={1}
-                          borderRadius="md"
-                        >
+                      {new Date().getTime() - new Date(post.createdAt).getTime() < 24 * 60 * 60 * 1000 && (
+                        <Badge colorScheme="teal" fontSize="0.8em" px={2} py={1} borderRadius="md">
                           Yeni
                         </Badge>
                       )}
-                      {/* Menü butonu ve içerikleri */}
                       {renderPostMenu(post)}
                     </Flex>
                   </Flex>
 
                   <Text fontSize="sm" color="gray.500" mb={2}>
-                    by {post.author?.name ?? "Bilinmiyor"} -{" "}
-                    {new Date(post.createdAt).toLocaleDateString()}
+                    by {post.author?.name ?? "Bilinmiyor"} - {new Date(post.createdAt).toLocaleDateString()}
                   </Text>
 
-                  <Text
-                    noOfLines={4}
-                    color={useColorModeValue("gray.700", "gray.300")}
-                    mb={4}
-                  >
+                  <Text noOfLines={4} color={useColorModeValue("gray.700", "gray.300")} mb={4}>
                     {post.content}
                   </Text>
                   <Button
-                    as={Link} // RouterLink yerine ChakraLink'i as ile kullanabilirsiniz
+                    as={Link}
                     to={`/posts/${post.id}`}
                     mt="auto"
                     size="sm"
@@ -318,7 +237,6 @@ const Home = () => {
                     variant="outline"
                     aria-label={`Devamını oku: ${post.title}`}
                     fontWeight="semibold"
-                    // Bu butona tıklayınca da navigate olduğu için onClick'i kaldırdık
                   >
                     Devamını Oku
                   </Button>
@@ -357,8 +275,8 @@ const Home = () => {
           </ModalBody>
         </ModalContent>
       </Modal>
-      {/* Postu Güncell Modalı */}
 
+      {/* Postu Güncelle Modalı */}
       <Modal isOpen={isEditOpen} onClose={onEditClose} size="xl" isCentered>
         <ModalOverlay />
         <ModalContent>
@@ -371,9 +289,7 @@ const Home = () => {
                 onClose={onEditClose}
                 onSuccess={(updatedPost) => {
                   setEditingPost(null);
-                  setPosts((prev: Post[]) =>
-                    prev.map((p) => (p.id === updatedPost.id ? { ...p, ...updatedPost } : p))
-                  );
+                  dispatch(updatePostThunk(updatedPost)); // güncel veriyi redux üzerinden yenile
                 }}
               />
             )}

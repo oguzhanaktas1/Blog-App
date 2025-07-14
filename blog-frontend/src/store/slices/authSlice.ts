@@ -1,8 +1,8 @@
-import { createSlice } from '@reduxjs/toolkit';
-import { createAsyncThunk } from '@reduxjs/toolkit';
-import type { AuthResponse } from '../../services/auth';
-import { login as loginApi, signup as signupApi } from '../../services/auth';
-import type { AxiosError } from 'axios';
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { createSlice } from "@reduxjs/toolkit";
+import { createAsyncThunk } from "@reduxjs/toolkit";
+import type { AuthResponse } from "../../services/auth";
+import { login as loginApi, signup as signupApi } from "../../services/auth";
 
 interface User {
   id: number;
@@ -28,14 +28,14 @@ export const loginThunk = createAsyncThunk<
   AuthResponse,
   { email: string; password: string },
   { rejectValue: string }
->('auth/login', async (data, { rejectWithValue }) => {
+>("auth/login", async (data, { rejectWithValue }) => {
   try {
     const res = await loginApi(data);
-    localStorage.setItem('token', res.token);
+    localStorage.setItem("token", res.token);
     return res;
-  } catch (err: unknown) {
-    const error = err as AxiosError<{ error?: string }>;
-    return rejectWithValue(error.response?.data?.error || 'Login failed');
+  } catch (err: any) {
+    const errorMessage = err?.response?.data?.error || "Login failed";
+    return rejectWithValue(errorMessage);
   }
 });
 
@@ -48,14 +48,15 @@ export const signupThunk = createAsyncThunk<
     const res = await signupApi(data);
     localStorage.setItem('token', res.token);
     return res;
-  } catch (err: unknown) {
-    const error = err as AxiosError<{ error?: string }>;
-    return rejectWithValue(error.response?.data?.error || 'Signup failed');
+  } catch (err: any) {
+    const errorMessage = err?.response?.data?.error || 'Signup failed';
+    return rejectWithValue(errorMessage);
   }
 });
 
+
 const authSlice = createSlice({
-  name: 'auth',
+  name: "auth",
   initialState,
   reducers: {
     logout(state) {
@@ -63,7 +64,7 @@ const authSlice = createSlice({
       state.token = null;
       state.loading = false;
       state.error = null;
-      localStorage.removeItem('token');
+      localStorage.removeItem("token");
     },
   },
   extraReducers: (builder) => {
@@ -80,7 +81,7 @@ const authSlice = createSlice({
       })
       .addCase(loginThunk.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload || 'Login failed';
+        state.error = action.payload || "Login failed";
       })
       .addCase(signupThunk.pending, (state) => {
         state.loading = true;
@@ -94,10 +95,10 @@ const authSlice = createSlice({
       })
       .addCase(signupThunk.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload || 'Signup failed';
+        state.error = action.payload || "Signup failed";
       });
   },
 });
 
 export const { logout } = authSlice.actions;
-export default authSlice.reducer; 
+export default authSlice.reducer;
