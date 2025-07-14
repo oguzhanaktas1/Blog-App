@@ -1,4 +1,16 @@
-import { Flex, Box, Button, Spacer, Avatar, Menu, MenuButton, MenuList, MenuItem, MenuDivider, Text } from "@chakra-ui/react";
+import {
+  Flex,
+  Box,
+  Button,
+  Spacer,
+  Avatar,
+  Menu,
+  MenuButton,
+  MenuList,
+  MenuItem,
+  MenuDivider,
+  Text,
+} from "@chakra-ui/react";
 import { Link, useNavigate } from "react-router-dom";
 import { getUserRole } from "../utils/getUserRole";
 import { getUserInfo } from "../utils/getUserInfo";
@@ -12,6 +24,7 @@ type NavbarProps = {
 export default function Navbar({ isLoggedIn, setIsLoggedIn }: NavbarProps) {
   const navigate = useNavigate();
   const userInfo = getUserInfo();
+  const userRole = getUserRole(); // ✅ Rolü al
 
   const handleLogout = () => {
     localStorage.removeItem("token");
@@ -47,7 +60,7 @@ export default function Navbar({ isLoggedIn, setIsLoggedIn }: NavbarProps) {
           Home
         </Button>
 
-        {isLoggedIn && getUserRole() === "admin" && (
+        {isLoggedIn && userRole === "admin" && (
           <Button
             as={Link}
             to="/admin"
@@ -133,6 +146,9 @@ export default function Navbar({ isLoggedIn, setIsLoggedIn }: NavbarProps) {
                 />
                 <Text fontWeight="bold">{userInfo.name || "Kullanıcı"}</Text>
                 <Text fontSize="sm" color="gray.500">{userInfo.email || "-"}</Text>
+                <Text fontSize="sm" color="gray.400" mt={1}>
+                  Role: <b>{userRole}</b>
+                </Text>
               </Box>
               <MenuDivider />
               <MenuItem color="red.500" onClick={handleLogout} justifyContent="center">

@@ -21,6 +21,14 @@ export const getPosts = async (): Promise<Post[]> => {
 };
 
 export const createPost = async (postData: { title: string; content: string }): Promise<Post> => {
-  const res = await axios.post<Post>('/posts', postData);  // Generic tip verildi
+  const token = localStorage.getItem("token");
+
+  const res = await axios.post<Post>('/posts', postData, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
   return res.data;
 };
+

@@ -16,7 +16,7 @@ export const getAllPosts = async (
         author: {
           select: {
             name: true,
-            email: true, // istersen sadece name bırak
+            email: true,
           },
         },
       },
@@ -34,7 +34,17 @@ export const getPostById = async (
 ) => {
   try {
     const id = Number(req.params.id);
-    const post = await prisma.post.findUnique({ where: { id } });
+    const post = await prisma.post.findUnique({
+      where: { id },
+      include: {   // <-- burada author bilgisini ekle
+        author: {
+          select: {
+            name: true,
+            email: true, // istersen sadece name de olabilir
+          },
+        },
+      },
+    });
     if (!post) {
       res.status(404).json({ error: "Post not found" });
       return;
@@ -44,6 +54,7 @@ export const getPostById = async (
     next(error);
   }
 };
+
 
 export const createPost = async (
   req: AuthRequest,
@@ -91,15 +102,22 @@ export const updatePost = async (
     const updated = await prisma.post.update({
       where: { id },
       data: { title, content },
+      include: {
+        author: {
+          select: {
+            name: true,
+            email: true, // veya sadece name: true da olur
+          },
+        },
+      },
     });
+    res.json(updated);
 
     res.json(updated);
   } catch (error) {
     next(error);
   }
 };
-
-
 
 export const deletePost = async (
   req: AuthRequest,
@@ -125,6 +143,3 @@ export const deletePost = async (
     next(error);
   }
 };
-
-
-

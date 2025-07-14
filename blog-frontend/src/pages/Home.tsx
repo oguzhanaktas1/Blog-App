@@ -36,7 +36,11 @@ import { getUserRole } from "../utils/getUserRole";
 
 // Redux
 import { useDispatch, useSelector } from "react-redux";
-import { fetchPostsThunk, deletePostThunk, updatePostThunk } from "../store/slices/postsSlice";
+import {
+  fetchPostsThunk,
+  deletePostThunk,
+  updatePostThunk,
+} from "../store/slices/postsSlice";
 import type { RootState, AppDispatch } from "../store";
 
 const Home = () => {
@@ -55,7 +59,9 @@ const Home = () => {
     onClose: onEditClose,
   } = useDisclosure();
 
-  const [editingPost, setEditingPost] = useState<typeof posts[0] | null>(null);
+  const [editingPost, setEditingPost] = useState<(typeof posts)[0] | null>(
+    null
+  );
 
   useEffect(() => {
     dispatch(fetchPostsThunk());
@@ -70,10 +76,9 @@ const Home = () => {
     }
   };
 
-  
   const handleDelete = async (postId: number) => {
     const result = await dispatch(deletePostThunk(postId));
-  
+
     if (deletePostThunk.fulfilled.match(result)) {
       toast({
         title: "Post silindi.",
@@ -92,7 +97,7 @@ const Home = () => {
     }
   };
 
-  const renderPostMenu = (post: typeof posts[0]) => {
+  const renderPostMenu = (post: (typeof posts)[0]) => {
     const userEmail = getUserEmail();
     const userRole = getUserRole();
 
@@ -146,7 +151,11 @@ const Home = () => {
   };
 
   return (
-    <Box minH="100vh" minW="100vw" bg={useColorModeValue("gray.50", "gray.900")}>
+    <Box
+      minH="100vh"
+      minW="100vw"
+      bg={useColorModeValue("gray.50", "gray.900")}
+    >
       {/* Hero Section */}
       <Box
         as="section"
@@ -166,11 +175,16 @@ const Home = () => {
         maxW="100vw"
       >
         <Box maxW="container.xl" mx="auto" px={{ base: 4, md: 0 }}>
-          <Heading fontWeight="extrabold" fontSize={{ base: "3xl", md: "5xl" }} mb={4}>
+          <Heading
+            fontWeight="extrabold"
+            fontSize={{ base: "3xl", md: "5xl" }}
+            mb={4}
+          >
             Welcome to the Modern Blog
           </Heading>
           <Text fontSize={{ base: "md", md: "xl" }} maxW="2xl" mx="auto">
-            Discover, create, and share your thoughts with the world. Start by reading the latest posts or add your own!
+            Discover, create, and share your thoughts with the world. Start by
+            reading the latest posts or add your own!
           </Text>
         </Box>
       </Box>
@@ -180,7 +194,12 @@ const Home = () => {
         <Container maxW="container.xl" px={{ base: 4, md: "20%" }}>
           {loading ? (
             <Flex justify="center" mt={20} minH="40vh">
-              <Spinner size="xl" thickness="4px" speed="0.8s" color="teal.400" />
+              <Spinner
+                size="xl"
+                thickness="4px"
+                speed="0.8s"
+                color="teal.400"
+              />
             </Flex>
           ) : posts.length === 0 ? (
             <Flex direction="column" align="center" mt={16} minH="40vh">
@@ -190,58 +209,83 @@ const Home = () => {
             </Flex>
           ) : (
             <VStack spacing={8} w="100%" align="stretch" py={8}>
-              {posts.slice().reverse().map((post) => (
-                <Box
-                  key={post.id}
-                  p={6}
-                  bg={bg}
-                  boxShadow={boxShadow}
-                  borderRadius="xl"
-                  transition="all 0.2s"
-                  _hover={{
-                    boxShadow: "xl",
-                    transform: "translateY(-6px) scale(1.00)",
-                    cursor: "pointer",
-                  }}
-                  display="flex"
-                  flexDirection="column"
-                  w="100%"
-                >
-                  <Flex justify="space-between" align="center" mb={3}>
-                    <Heading fontSize={{ base: "lg", md: "xl" }} noOfLines={1} flex="1" mr={4}>
-                      {post.title}
-                    </Heading>
-                    <Flex align="center" gap={2}>
-                      {new Date().getTime() - new Date(post.createdAt).getTime() < 24 * 60 * 60 * 1000 && (
-                        <Badge colorScheme="teal" fontSize="0.8em" px={2} py={1} borderRadius="md">
-                          Yeni
-                        </Badge>
-                      )}
-                      {renderPostMenu(post)}
-                    </Flex>
-                  </Flex>
-
-                  <Text fontSize="sm" color="gray.500" mb={2}>
-                    by {post.author?.name ?? "Bilinmiyor"} - {new Date(post.createdAt).toLocaleDateString()}
-                  </Text>
-
-                  <Text noOfLines={4} color={useColorModeValue("gray.700", "gray.300")} mb={4}>
-                    {post.content}
-                  </Text>
-                  <Button
-                    as={Link}
-                    to={`/posts/${post.id}`}
-                    mt="auto"
-                    size="sm"
-                    colorScheme="teal"
-                    variant="outline"
-                    aria-label={`Devamını oku: ${post.title}`}
-                    fontWeight="semibold"
+              {posts
+                .slice()
+                .sort(
+                  (a, b) =>
+                    new Date(b.createdAt).getTime() -
+                    new Date(a.createdAt).getTime()
+                )
+                .map((post) => (
+                  <Box
+                    key={post.id}
+                    p={6}
+                    bg={bg}
+                    boxShadow={boxShadow}
+                    borderRadius="xl"
+                    transition="all 0.2s"
+                    _hover={{
+                      boxShadow: "xl",
+                      transform: "translateY(-6px) scale(1.00)",
+                      cursor: "pointer",
+                    }}
+                    display="flex"
+                    flexDirection="column"
+                    w="100%"
                   >
-                    Devamını Oku
-                  </Button>
-                </Box>
-              ))}
+                    <Flex justify="space-between" align="center" mb={3}>
+                      <Heading
+                        fontSize={{ base: "lg", md: "xl" }}
+                        noOfLines={1}
+                        flex="1"
+                        mr={4}
+                      >
+                        {post.title}
+                      </Heading>
+                      <Flex align="center" gap={2}>
+                        {new Date().getTime() -
+                          new Date(post.createdAt).getTime() <
+                          24 * 60 * 60 * 1000 && (
+                          <Badge
+                            colorScheme="teal"
+                            fontSize="0.8em"
+                            px={2}
+                            py={1}
+                            borderRadius="md"
+                          >
+                            Yeni
+                          </Badge>
+                        )}
+                        {renderPostMenu(post)}
+                      </Flex>
+                    </Flex>
+
+                    <Text fontSize="sm" color="gray.500" mb={2}>
+                      by {post.author?.name ?? "Bilinmiyor"} -{" "}
+                      {new Date(post.createdAt).toLocaleDateString()}
+                    </Text>
+
+                    <Text
+                      noOfLines={4}
+                      color={useColorModeValue("gray.700", "gray.300")}
+                      mb={4}
+                    >
+                      {post.content}
+                    </Text>
+                    <Button
+                      as={Link}
+                      to={`/posts/${post.id}`}
+                      mt="auto"
+                      size="sm"
+                      colorScheme="teal"
+                      variant="outline"
+                      aria-label={`Devamını oku: ${post.title}`}
+                      fontWeight="semibold"
+                    >
+                      Devamını Oku
+                    </Button>
+                  </Box>
+                ))}
             </VStack>
           )}
         </Container>

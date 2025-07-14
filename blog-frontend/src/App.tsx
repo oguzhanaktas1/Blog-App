@@ -10,6 +10,7 @@ import { useEffect, useState } from "react";
 import UsersList from "./pages/admin/UsersList";
 import UserDetail from "./pages/admin/UserDetail";
 import CreatePostPage from "./pages/CreatePostPage";
+import PostDetail from "./pages/PostDetail";
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -31,6 +32,7 @@ function App() {
           <Route path="/admin/users" element={<UsersList />} />
           <Route path="/admin/users/:id" element={<UserDetail />} />
           <Route path="/create-post" element={<CreatePostPage />} />
+          <Route path="/posts/:id" element={<PostDetail />} />
         </Routes>
       </Router>
     </ChakraProvider>
