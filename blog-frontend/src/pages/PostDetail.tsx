@@ -34,6 +34,7 @@ import { useDispatch } from "react-redux";
 import { deletePostThunk, updatePostThunk } from "../store/slices/postsSlice";
 import type { AppDispatch } from "../store";
 import api from "../api/axios";
+import PostCommentSection from "../components/PostCommentSection";
 
 interface Post {
   id: number;
@@ -182,6 +183,8 @@ const PostDetail = () => {
               <Text fontSize={{ base: "md", md: "lg" }} color={useColorModeValue("gray.700", "gray.200")} mb={4}>
                 {post.content}
               </Text>
+              {/* Yorumlar */}
+              <PostCommentSection postId={post.id} />
             </Box>
           ) : (
             <Text color="red.500">Post bulunamadı.</Text>

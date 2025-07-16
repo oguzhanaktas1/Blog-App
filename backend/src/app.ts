@@ -4,6 +4,7 @@ import cors from "cors"
 import postRoutes from "./routes/postRoutes"
 import authRoutes from "./routes/authRoutes"
 import adminRoutes from "./routes/admin";
+import commentRoutes from "./routes/comment";
 
 const app = express()
 
@@ -12,6 +13,7 @@ app.use(express.json())
 
 app.use("/auth", authRoutes);
 app.use("/posts", postRoutes)
+app.use("/api", commentRoutes);
 
 app.use("/admin", adminRoutes);
 
