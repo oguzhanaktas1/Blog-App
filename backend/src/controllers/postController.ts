@@ -111,8 +111,7 @@ export const updatePost = async (
         },
       },
     });
-    res.json(updated);
-
+    
     res.json(updated);
   } catch (error) {
     next(error);
