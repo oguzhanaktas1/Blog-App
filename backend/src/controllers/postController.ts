@@ -130,13 +130,15 @@ export const deletePost = async (
 
     const isOwner = post?.authorId === req.userId;
     const isAdmin = req.userRole === "admin";
-    console.log("userId:", req.userId, "role:", req.userRole);
-
     if (!post || (!isOwner && !isAdmin)) {
       res.status(403).json({ error: "Yetkisiz işlem" });
       return;
     }
 
+    // Önce ilgili yorumları sil
+    await prisma.comment.deleteMany({ where: { postId: id } });
+
+    // Sonra postu sil
     await prisma.post.delete({ where: { id } });
     res.status(204).send();
   } catch (error) {
