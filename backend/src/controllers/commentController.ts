@@ -75,6 +75,7 @@ export const addComment = async (req: AuthRequest, res: Response) => {
       id: newComment.id,
       text: newComment.text,
       createdAt: newComment.createdAt,
+      postId: newComment.postId, // include postId in response
       author: newComment.author
         ? {
             id: newComment.author.id,

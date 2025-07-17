@@ -33,6 +33,7 @@ import NewPostForm from "../components/NewPostForm";
 import UpdatePostForm from "../components/UpdatePostForm";
 import { getUserEmail } from "../utils/getUserEmail";
 import { getUserRole } from "../utils/getUserRole";
+import PostCommentSection from "../components/PostCommentSection";
 
 // Redux
 import { useDispatch, useSelector } from "react-redux";
@@ -272,18 +273,24 @@ const Home = () => {
                     >
                       {post.content}
                     </Text>
-                    <Button
-                      as={Link}
-                      to={`/posts/${post.id}`}
-                      mt="auto"
-                      size="sm"
-                      colorScheme="teal"
-                      variant="outline"
-                      aria-label={`Devamını oku: ${post.title}`}
-                      fontWeight="semibold"
-                    >
-                      Devamını Oku
-                    </Button>
+                    {post.content.length > 300 && (
+                      <Button
+                        as={Link}
+                        to={`/posts/${post.id}`}
+                        mt="auto"
+                        size="sm"
+                        colorScheme="teal"
+                        variant="outline"
+                        aria-label={`Devamını oku: ${post.title}`}
+                        fontWeight="semibold"
+                      >
+                        Devamını Oku
+                      </Button>
+                    )}
+                    {/* Add comment section under each post */}
+                    <Box mt={6}>
+                      <PostCommentSection postId={post.id} />
+                    </Box>
                   </Box>
                 ))}
             </VStack>

@@ -27,7 +27,7 @@ export const deleteCommentThunk = createAsyncThunk(
 const commentsSlice = createSlice({
   name: "comments",
   initialState: {
-    items: [],
+    items: {}, // { [postId]: Comment[] }
     loading: false,
     error: null,
   } as any,
@@ -40,17 +40,26 @@ const commentsSlice = createSlice({
       })
       .addCase(fetchCommentsThunk.fulfilled, (state, action) => {
         state.loading = false;
-        state.items = action.payload;
+        // action.meta.arg is postId
+        state.items[action.meta.arg] = action.payload;
       })
       .addCase(fetchCommentsThunk.rejected, (state, action) => {
         state.loading = false;
         state.error = action.error.message;
       })
       .addCase(addCommentThunk.fulfilled, (state, action) => {
-        state.items.push(action.payload);
+        // action.payload should be a comment with postId (now always present)
+        const payload = action.payload as { id: number; text: string; createdAt: string; postId: number; author?: any };
+        const postId = payload.postId;
+        if (!state.items[postId]) state.items[postId] = [];
+        state.items[postId].push(payload);
       })
       .addCase(deleteCommentThunk.fulfilled, (state, action) => {
-        state.items = state.items.filter((c: any) => c.id !== action.payload);
+        // action.payload should be commentId
+        const commentId = action.payload as number;
+        for (const postId in state.items) {
+          state.items[postId] = state.items[postId].filter((c: any) => c.id !== commentId);
+        }
       });
   },
 });

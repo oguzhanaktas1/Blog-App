@@ -26,7 +26,7 @@ interface Comment {
 const PostCommentSection = ({ postId }: PostCommentSectionProps) => {
   const dispatch = useDispatch();
   const commentsState = useSelector((state: RootState) => state.comments);
-  const comments = commentsState.items;
+  const comments = commentsState.items[postId] || [];
   const loading = commentsState.loading;
   const error = commentsState.error;
   const [text, setText] = useState("");
@@ -78,33 +78,6 @@ const PostCommentSection = ({ postId }: PostCommentSectionProps) => {
   return (
     <Box mt={8} p={4} bg="gray.50" borderRadius="md" boxShadow="sm">
       <VStack align="stretch" spacing={4}>
-        <Text fontWeight="bold" fontSize="lg">Yorumlar</Text>
-        {loading ? (
-          <Spinner />
-        ) : comments.length === 0 ? (
-          <Text>Henüz yorum yok.</Text>
-        ) : (
-          (comments as Comment[]).map((comment) => (
-            <Box key={comment.id} p={3} bg="white" borderRadius="md" boxShadow="xs">
-              <HStack justify="space-between">
-                <Box>
-                  <Text fontWeight="medium">{comment.author?.name || "Anonim"}</Text>
-                  <Text fontSize="sm" color="gray.500">{new Date(comment.createdAt).toLocaleString()}</Text>
-                  <Text mt={2}>{comment.text}</Text>
-                </Box>
-                {(userRole === "admin" || userEmail === comment.author?.email) && (
-                  <IconButton
-                    aria-label="Yorumu sil"
-                    icon={<DeleteIcon />}
-                    size="sm"
-                    colorScheme="red"
-                    onClick={() => handleDelete(comment.id)}
-                  />
-                )}
-              </HStack>
-            </Box>
-          ))
-        )}
         {isLoggedIn ? (
           <Box as="form" onSubmit={(e: React.FormEvent) => { e.preventDefault(); handleAddComment(); }}>
             <Textarea
@@ -123,6 +96,33 @@ const PostCommentSection = ({ postId }: PostCommentSectionProps) => {
             <AlertIcon />
             Yorum eklemek için giriş yapmalısınız.
           </Alert>
+        )}
+        <Text fontWeight="bold" fontSize="lg">Yorumlar</Text>
+        {loading ? (
+          <Spinner />
+        ) : comments.length === 0 ? (
+          <Text>Henüz yorum yok.</Text>
+        ) : (
+          (comments as Comment[]).slice().reverse().map((comment) => (
+            <Box key={comment.id} p={3} bg="white" borderRadius="md" boxShadow="xs">
+              <HStack justify="space-between">
+                <Box>
+                  <Text fontWeight="medium">{comment.author?.name || "Anonim"}</Text>
+                  <Text fontSize="sm" color="gray.500">{new Date(comment.createdAt).toLocaleString()}</Text>
+                  <Text mt={2} style={{ wordBreak: 'break-word', overflowWrap: 'break-word', whiteSpace: 'pre-line' }}>{comment.text}</Text>
+                </Box>
+                {(userRole === "admin" || userEmail === comment.author?.email) && (
+                  <IconButton
+                    aria-label="Yorumu sil"
+                    icon={<DeleteIcon />}
+                    size="sm"
+                    colorScheme="red"
+                    onClick={() => handleDelete(comment.id)}
+                  />
+                )}
+              </HStack>
+            </Box>
+          ))
         )}
         {error && (
           <Alert status="error">
