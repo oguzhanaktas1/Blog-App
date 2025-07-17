@@ -18,11 +18,13 @@ import {
   ModalCloseButton,
   ModalBody,
   useToast,
+  Button,
 } from "@chakra-ui/react";
 import type { ReactNode } from "react";
 import { FiMoreVertical } from "react-icons/fi";
 import UpdatePostForm from "./UpdatePostForm";
 import React from "react";
+import { Link } from "react-router-dom";
 
 interface Author {
   name?: string | null;
@@ -48,6 +50,7 @@ interface PostContentBoxProps {
   showBadge?: boolean;
   headingSize?: string;
   contentLines?: number;
+  showReadMore?: boolean; // new prop
 }
 
 const PostContentBox = ({
@@ -60,6 +63,7 @@ const PostContentBox = ({
   showBadge = true,
   headingSize = "xl",
   contentLines = 4,
+  showReadMore = false,
 }: PostContentBoxProps) => {
   const bg = useColorModeValue("white", "gray.800");
   const boxShadow = useColorModeValue("md", "dark-lg");
@@ -174,6 +178,21 @@ const PostContentBox = ({
       >
         {post.content}
       </Text>
+      {/* Devamını Oku butonu sadece showReadMore true ise ve içerik uzun ise göster */}
+      {showReadMore && post.content.length > 300 && (
+        <Button
+          as={Link}
+          to={`/posts/${post.id}`}
+          mt="auto"
+          size="sm"
+          colorScheme="teal"
+          variant="outline"
+          aria-label={`Devamını oku: ${post.title}`}
+          fontWeight="semibold"
+        >
+          Devamını Oku
+        </Button>
+      )}
       {children}
       {/* Update Modal */}
       <Modal isOpen={isOpen} onClose={onClose} size="xl" isCentered>
