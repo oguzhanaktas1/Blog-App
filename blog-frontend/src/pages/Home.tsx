@@ -1,39 +1,31 @@
-/* eslint-disable react-hooks/rules-of-hooks */
-import { useEffect, useState } from "react";
+ 
+import { useEffect } from "react";
 import {
   Box,
-  Heading,
   Text,
   Spinner,
   Container,
   Flex,
-  Badge,
   Button,
   useColorModeValue,
-  IconButton,
   Tooltip,
   useDisclosure,
   Modal,
   ModalOverlay,
   ModalContent,
-  ModalHeader,
   ModalCloseButton,
   ModalBody,
   VStack,
-  Menu,
-  MenuButton,
-  MenuList,
-  MenuItem,
   useToast,
+  IconButton,
 } from "@chakra-ui/react";
-import { FiMoreVertical } from "react-icons/fi";
 import { AddIcon } from "@chakra-ui/icons";
 import { Link, useNavigate } from "react-router-dom";
 import NewPostForm from "../components/NewPostForm";
-import UpdatePostForm from "../components/UpdatePostForm";
 import { getUserEmail } from "../utils/getUserEmail";
 import { getUserRole } from "../utils/getUserRole";
 import PostCommentSection from "../components/PostCommentSection";
+import PostContentBox from "../components/PostContentBox";
 
 // Redux
 import { useDispatch, useSelector } from "react-redux";
@@ -48,21 +40,10 @@ const Home = () => {
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
   const toast = useToast();
-  const bg = useColorModeValue("white", "gray.800");
-  const boxShadow = useColorModeValue("md", "dark-lg");
   const posts = useSelector((state: RootState) => state.posts.posts);
   const loading = useSelector((state: RootState) => state.posts.loading);
 
   const { isOpen, onOpen, onClose } = useDisclosure();
-  const {
-    isOpen: isEditOpen,
-    onOpen: onEditOpen,
-    onClose: onEditClose,
-  } = useDisclosure();
-
-  const [editingPost, setEditingPost] = useState<(typeof posts)[0] | null>(
-    null
-  );
 
   useEffect(() => {
     dispatch(fetchPostsThunk());
@@ -77,79 +58,8 @@ const Home = () => {
     }
   };
 
-  const handleDelete = async (postId: number) => {
-    const result = await dispatch(deletePostThunk(postId));
-
-    if (deletePostThunk.fulfilled.match(result)) {
-      toast({
-        title: "Post silindi.",
-        status: "success",
-        duration: 3000,
-        isClosable: true,
-      });
-    } else {
-      toast({
-        title: "Silme başarısız",
-        description: result.payload || "Bu postu silemedik.",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
-    }
-  };
-
-  const renderPostMenu = (post: (typeof posts)[0]) => {
-    const userEmail = getUserEmail();
-    const userRole = getUserRole();
-
-    const isAdmin = userRole === "admin";
-    const isPostOwner = userEmail === post.author?.email;
-    const canModify = isAdmin || isPostOwner;
-
-    return (
-      <Menu>
-        <MenuButton
-          as={IconButton}
-          icon={<FiMoreVertical />}
-          variant="ghost"
-          size="sm"
-          aria-label="Post options"
-        />
-        <MenuList>
-          {canModify && (
-            <MenuItem
-              onClick={() => {
-                setEditingPost(post);
-                onEditOpen();
-              }}
-            >
-              Güncelle
-            </MenuItem>
-          )}
-          <MenuItem
-            onClick={() => {
-              const url = `${window.location.origin}/posts/${post.id}`;
-              navigator.clipboard.writeText(url);
-              toast({
-                title: "Bağlantı kopyalandı!",
-                description: "Gönderi bağlantısı panoya kopyalandı.",
-                status: "info",
-                duration: 2500,
-                isClosable: true,
-              });
-            }}
-          >
-            Paylaş
-          </MenuItem>
-          {canModify && (
-            <MenuItem color="red.500" onClick={() => handleDelete(post.id)}>
-              Sil
-            </MenuItem>
-          )}
-        </MenuList>
-      </Menu>
-    );
-  };
+  const userEmail = getUserEmail();
+  const userRole = getUserRole();
 
   return (
     <Box
@@ -176,13 +86,13 @@ const Home = () => {
         maxW="100vw"
       >
         <Box maxW="container.xl" mx="auto" px={{ base: 4, md: 0 }}>
-          <Heading
+          <Text
             fontWeight="extrabold"
             fontSize={{ base: "3xl", md: "5xl" }}
             mb={4}
           >
             Welcome to the Modern Blog
-          </Heading>
+          </Text>
           <Text fontSize={{ base: "md", md: "xl" }} maxW="2xl" mx="auto">
             Discover, create, and share your thoughts with the world. Start by
             reading the latest posts or add your own!
@@ -218,79 +128,46 @@ const Home = () => {
                     new Date(a.createdAt).getTime()
                 )
                 .map((post) => (
-                  <Box
-                    key={post.id}
-                    p={6}
-                    bg={bg}
-                    boxShadow={boxShadow}
-                    borderRadius="xl"
-                    transition="all 0.2s"
-                    _hover={{
-                      boxShadow: "xl",
-                      transform: "translateY(-6px) scale(1.00)",
-                      cursor: "pointer",
-                    }}
-                    display="flex"
-                    flexDirection="column"
-                    w="100%"
-                  >
-                    <Flex justify="space-between" align="center" mb={3}>
-                      <Heading
-                        fontSize={{ base: "lg", md: "xl" }}
-                        noOfLines={1}
-                        flex="1"
-                        mr={4}
-                      >
-                        {post.title}
-                      </Heading>
-                      <Flex align="center" gap={2}>
-                        {new Date().getTime() -
-                          new Date(post.createdAt).getTime() <
-                          24 * 60 * 60 * 1000 && (
-                          <Badge
-                            colorScheme="teal"
-                            fontSize="0.8em"
-                            px={2}
-                            py={1}
-                            borderRadius="md"
-                          >
-                            Yeni
-                          </Badge>
-                        )}
-                        {renderPostMenu(post)}
-                      </Flex>
-                    </Flex>
-
-                    <Text fontSize="sm" color="gray.500" mb={2}>
-                      by {post.author?.name ?? "Bilinmiyor"} -{" "}
-                      {new Date(post.createdAt).toLocaleDateString()}
-                    </Text>
-
-                    <Text
-                      noOfLines={4}
-                      color={useColorModeValue("gray.700", "gray.300")}
-                      mb={4}
+                  <Box key={post.id}>
+                    <PostContentBox
+                      post={post}
+                      userEmail={userEmail}
+                      userRole={userRole}
+                      onUpdate={(updatedPost) => {
+                        dispatch(updatePostThunk(updatedPost));
+                      }}
+                      onDelete={(postId) => {
+                        dispatch(deletePostThunk(postId));
+                        toast({
+                          title: "Post silindi.",
+                          status: "success",
+                          duration: 3000,
+                          isClosable: true,
+                        });
+                      }}
+                      showBadge={true}
+                      headingSize="lg"
+                      contentLines={4}
                     >
-                      {post.content}
-                    </Text>
-                    {post.content.length > 300 && (
-                      <Button
-                        as={Link}
-                        to={`/posts/${post.id}`}
-                        mt="auto"
-                        size="sm"
-                        colorScheme="teal"
-                        variant="outline"
-                        aria-label={`Devamını oku: ${post.title}`}
-                        fontWeight="semibold"
-                      >
-                        Devamını Oku
-                      </Button>
-                    )}
-                    {/* Add comment section under each post */}
-                    <Box mt={6}>
-                      <PostCommentSection postId={post.id} />
-                    </Box>
+                      {post.content.length > 300 && (
+                        <Button
+                          as={Link}
+                          to={`/posts/${post.id}`}
+                          mt="auto"
+                          size="sm"
+                          colorScheme="teal"
+                          variant="outline"
+                          aria-label={`Devamını oku: ${post.title}`}
+                          fontWeight="semibold"
+                        >
+                          Devamını Oku
+                        </Button>
+                      )}
+                      {/* Add comment section under each post */}
+                      <Box mt={6}>
+                        <PostCommentSection postId={post.id} />
+                      </Box>
+                    </PostContentBox>
                   </Box>
                 ))}
             </VStack>
@@ -323,27 +200,6 @@ const Home = () => {
           <ModalCloseButton />
           <ModalBody>
             <NewPostForm />
-          </ModalBody>
-        </ModalContent>
-      </Modal>
-
-      {/* Postu Güncelle Modalı */}
-      <Modal isOpen={isEditOpen} onClose={onEditClose} size="xl" isCentered>
-        <ModalOverlay />
-        <ModalContent>
-          <ModalHeader>Postu Güncelle</ModalHeader>
-          <ModalCloseButton />
-          <ModalBody>
-            {editingPost && (
-              <UpdatePostForm
-                post={editingPost}
-                onClose={onEditClose}
-                onSuccess={(updatedPost) => {
-                  setEditingPost(null);
-                  dispatch(updatePostThunk(updatedPost)); // güncel veriyi redux üzerinden yenile
-                }}
-              />
-            )}
           </ModalBody>
         </ModalContent>
       </Modal>
