@@ -11,6 +11,7 @@ import UsersList from "./pages/admin/UsersList";
 import UserDetail from "./pages/admin/UserDetail";
 import CreatePostPage from "./pages/CreatePostPage";
 import PostDetail from "./pages/PostDetail";
+import NotFoundPage from "./pages/404";
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -33,6 +34,8 @@ function App() {
           <Route path="/admin/users/:id" element={<UserDetail />} />
           <Route path="/create-post" element={<CreatePostPage />} />
           <Route path="/posts/:id" element={<PostDetail />} />
+          {/* 404 fallback route */}
+          <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </Router>
     </ChakraProvider>
