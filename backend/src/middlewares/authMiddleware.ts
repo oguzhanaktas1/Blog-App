@@ -17,8 +17,6 @@ export const authenticateToken = (req: AuthRequest, res: Response, next: NextFun
   const authHeader = req.headers.authorization;
   const token = authHeader && authHeader.split(" ")[1];
 
-  console.log("Authorization header:", req.headers.authorization);
-
   if (!token) {
     res.status(401).json({ error: "Access denied" });
     return;
@@ -26,7 +24,6 @@ export const authenticateToken = (req: AuthRequest, res: Response, next: NextFun
 
   try {
     const decoded = jwt.verify(token, JWT_SECRET) as TokenPayload;
-    console.log("Decoded token:", decoded);
     req.userId = decoded.userId;
     req.userRole = decoded.role;
     next();
@@ -63,7 +60,6 @@ export const authorizeRole = (role: string) => {
 
 export const authMiddleware = (req: AuthRequest, res: Response, next: NextFunction) => {
   const authHeader = req.headers.authorization;
-  console.log("Authorization header:", req.headers.authorization);
   
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
     return res.status(401).json({ error: "Token bulunamadı" });

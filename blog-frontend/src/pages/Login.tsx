@@ -12,6 +12,8 @@ import {
   InputGroup,
   InputRightElement,
   IconButton,
+  FormControl,
+  FormLabel,
 } from "@chakra-ui/react";
 import { login } from "../services/auth";
 import { useNavigate, Link as RouterLink } from "react-router-dom";
@@ -89,53 +91,65 @@ export default function LoginPage({ setIsLoggedIn }: { setIsLoggedIn: (val: bool
           <Text mb={4} color="gray.600">
             Hesabınıza giriş yapmak için bilgilerinizi girin.
           </Text>
-          <VStack spacing={4}>
-            <Input
-              placeholder="E-posta Adresiniz"
-              name="email"
-              type="email"
-              value={form.email}
-              onChange={handleChange}
-              size="lg"
-              variant="filled"
-              _focus={{ borderColor: "teal.500", boxShadow: "0 0 0 1px teal.500" }}
-            />
-
-            {/* Şifre Input'u InputGroup ile sarmalıyız */}
-            <InputGroup size="lg" variant="filled">
-              <Input
-                placeholder="Şifreniz"
-                name="password"
-                type={showPassword ? "text" : "password"}
-                value={form.password}
-                onChange={handleChange}
-                _focus={{ borderColor: "teal.500", boxShadow: "0 0 0 1px teal.500" }}
-              />
-              <InputRightElement>
-                <IconButton
-                  aria-label={showPassword ? "Şifreyi gizle" : "Şifreyi göster"}
-                  icon={showPassword ? <ViewOffIcon /> : <ViewIcon />}
-                  onClick={toggleShowPassword}
-                  variant="ghost"
-                  size="sm"
-                  _hover={{ bg: "transparent" }}
-                  _active={{ bg: "transparent" }}
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleSubmit();
+            }}
+          >
+            <VStack spacing={4}>
+              <FormControl id="email" isRequired>
+                <FormLabel>E-posta Adresiniz</FormLabel>
+                <Input
+                  placeholder="E-posta Adresiniz"
+                  name="email"
+                  type="email"
+                  value={form.email}
+                  onChange={handleChange}
+                  size="lg"
+                  variant="filled"
+                  _focus={{ borderColor: "teal.500", boxShadow: "0 0 0 1px teal.500" }}
+                  autoComplete="username"
                 />
-              </InputRightElement>
-            </InputGroup>
-
-            <Button
-              colorScheme="teal"
-              size="lg"
-              width="full"
-              onClick={handleSubmit}
-              isLoading={isLoading}
-              _hover={{ bg: "teal.500" }}
-              _active={{ bg: "teal.600" }}
-            >
-              Giriş Yap
-            </Button>
-          </VStack>
+              </FormControl>
+              <FormControl id="password" isRequired>
+                <FormLabel>Şifreniz</FormLabel>
+                <InputGroup size="lg" variant="filled">
+                  <Input
+                    placeholder="Şifreniz"
+                    name="password"
+                    type={showPassword ? "text" : "password"}
+                    value={form.password}
+                    onChange={handleChange}
+                    _focus={{ borderColor: "teal.500", boxShadow: "0 0 0 1px teal.500" }}
+                    autoComplete="current-password"
+                  />
+                  <InputRightElement>
+                    <IconButton
+                      aria-label={showPassword ? "Şifreyi gizle" : "Şifreyi göster"}
+                      icon={showPassword ? <ViewOffIcon /> : <ViewIcon />}
+                      onClick={toggleShowPassword}
+                      variant="ghost"
+                      size="sm"
+                      _hover={{ bg: "transparent" }}
+                      _active={{ bg: "transparent" }}
+                    />
+                  </InputRightElement>
+                </InputGroup>
+              </FormControl>
+              <Button
+                colorScheme="teal"
+                size="lg"
+                width="full"
+                type="submit"
+                isLoading={isLoading}
+                _hover={{ bg: "teal.500" }}
+                _active={{ bg: "teal.600" }}
+              >
+                Giriş Yap
+              </Button>
+            </VStack>
+          </form>
           <Text mt={6} color="gray.600" fontSize="sm">
             Hesabınız yok mu?{" "}
             <ChakraLink as={RouterLink} to="/signup" color="teal.500" fontWeight="bold">
