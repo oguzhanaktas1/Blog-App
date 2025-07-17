@@ -144,3 +144,69 @@ export const deletePost = async (
     next(error);
   }
 };
+
+export const likePost = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+  console.log("likePost userId:", req.userId, "role:", req.userRole);
+  try {
+    const postId = Number(req.params.id);
+    const userId = req.userId;
+    if (!userId) { res.status(401).json({ error: "Giriş yapmalısınız" }); return; }
+    // Zaten like'ladıysa hata verme
+    const existing = await prisma.like.findUnique({ where: { userId_postId: { userId, postId } } });
+    if (existing) { res.status(200).json({ liked: true }); return; }
+    await prisma.like.create({ data: { userId, postId } });
+    res.status(201).json({ liked: true });
+    return;
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const unlikePost = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const postId = Number(req.params.id);
+    const userId = req.userId;
+    if (!userId) { res.status(401).json({ error: "Giriş yapmalısınız" }); return; }
+    await prisma.like.deleteMany({ where: { userId, postId } });
+    res.status(200).json({ liked: false });
+    return;
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const isPostLiked = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const postId = Number(req.params.id);
+    const userId = req.userId;
+    if (!userId) { res.status(200).json({ liked: false }); return; }
+    const like = await prisma.like.findUnique({ where: { userId_postId: { userId, postId } } });
+    res.status(200).json({ liked: !!like });
+    return;
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const getLikedPosts = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const userId = req.userId;
+    if (!userId) { res.status(401).json({ error: "Giriş yapmalısınız" }); return; }
+    const likes = await prisma.like.findMany({
+      where: { userId },
+      include: {
+        post: {
+          include: {
+            author: { select: { name: true, email: true } },
+          },
+        },
+      },
+      orderBy: { id: "desc" },
+    });
+    const posts = likes.map(like => like.post);
+    res.status(200).json(posts);
+    return;
+  } catch (err) {
+    next(err);
+  }
+};

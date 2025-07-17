@@ -25,6 +25,8 @@ import { FiMoreVertical } from "react-icons/fi";
 import UpdatePostForm from "./UpdatePostForm";
 import React from "react";
 import { Link } from "react-router-dom";
+import { AiFillHeart, AiOutlineHeart } from "react-icons/ai";
+import { likePost, unlikePost, isPostLiked } from "../services/post";
 
 interface Author {
   name?: string | null;
@@ -74,6 +76,41 @@ const PostContentBox = ({
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [editingPost, setEditingPost] =
     React.useState<PostContentBoxPost | null>(null);
+  const [liked, setLiked] = React.useState<boolean>(false);
+  const [likeLoading, setLikeLoading] = React.useState<boolean>(false);
+
+  React.useEffect(() => {
+    let mounted = true;
+    if (userEmail) {
+      isPostLiked(post.id)
+        .then((res) => {
+          if (mounted) setLiked(res.liked);
+        })
+        .catch(() => setLiked(false));
+    }
+    return () => { mounted = false; };
+  }, [post.id, userEmail]);
+
+  const handleLikeToggle = async () => {
+    if (!userEmail) {
+      toast({ title: "Giriş yapmalısınız", status: "warning" });
+      return;
+    }
+    setLikeLoading(true);
+    try {
+      if (liked) {
+        await unlikePost(post.id);
+        setLiked(false);
+      } else {
+        await likePost(post.id);
+        setLiked(true);
+      }
+    } catch {
+      toast({ title: "Bir hata oluştu", status: "error" });
+    } finally {
+      setLikeLoading(false);
+    }
+  };
 
   const isAdmin = userRole === "admin";
   const isPostOwner = userEmail === post.author?.email;
@@ -193,6 +230,16 @@ const PostContentBox = ({
           Devamını Oku
         </Button>
       )}
+      {/* Like (Kalp) Butonu */}
+      <IconButton
+        aria-label={liked ? "Beğenmekten vazgeç" : "Beğen"}
+        icon={liked ? <AiFillHeart color="red" /> : <AiOutlineHeart />}
+        variant="ghost"
+        size="lg"
+        mt={2}
+        isLoading={likeLoading}
+        onClick={handleLikeToggle}
+      />
       {children}
       {/* Update Modal */}
       <Modal isOpen={isOpen} onClose={onClose} size="xl" isCentered>

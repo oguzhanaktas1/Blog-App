@@ -8,6 +8,11 @@ import commentRoutes from "./routes/comment";
 
 const app = express()
 
+app.get("/test-log", (req, res) => {
+  console.log("Test log çalıştı!");
+  res.send("OK");
+});
+
 app.use(cors())
 app.use(express.json())
 

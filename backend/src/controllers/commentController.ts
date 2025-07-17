@@ -42,6 +42,7 @@ export const getCommentsByPost = async (req: Request, res: Response) => {
 };
 
 export const addComment = async (req: AuthRequest, res: Response) => {
+  console.log("addComment userId:", req.userId, "role:", req.userRole);
   const postId = parseInt(req.params.postId);
   const userId = req.userId;
   const { text } = req.body;

@@ -151,6 +151,9 @@ export default function Navbar({ isLoggedIn, setIsLoggedIn }: NavbarProps) {
                 </Text>
               </Box>
               <MenuDivider />
+              <MenuItem onClick={() => navigate("/profile")} justifyContent="center">
+                Profile
+              </MenuItem>
               <MenuItem color="red.500" onClick={handleLogout} justifyContent="center">
                 Logout
               </MenuItem>

@@ -25,6 +25,7 @@ import { getUserEmail } from "../utils/getUserEmail";
 import { getUserRole } from "../utils/getUserRole";
 import PostCommentSection from "../components/PostCommentSection";
 import PostContentBox from "../components/PostContentBox";
+import Profile from "./Profile";
 
 // Redux
 import { useDispatch, useSelector } from "react-redux";
