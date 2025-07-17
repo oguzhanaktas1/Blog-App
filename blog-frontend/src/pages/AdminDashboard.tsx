@@ -35,7 +35,7 @@ interface Post {
 
 interface Comment {
   id: number;
-  content: string;
+  text: string;
   postId: number;
 }
 
@@ -219,10 +219,14 @@ export default function AdminDashboard() {
                       borderWidth={1}
                       borderRadius="md"
                     >
+                      <Text fontSize="sm" color="gray.500">
+                        Post ID: <a href={`/posts/${post.id}`} style={{ color: '#319795', textDecoration: 'underline' }} target="_blank" rel="noopener noreferrer">{post.id}</a>
+                      </Text>
                       <Text fontWeight="bold">{post.title}</Text>
                       <Text fontSize="sm" noOfLines={2}>
                         {post.content}
                       </Text>
+                      
                     </Box>
                   ))}
                 </VStack>
@@ -243,10 +247,10 @@ export default function AdminDashboard() {
                       borderWidth={1}
                       borderRadius="md"
                     >
-                      <Text>{comment.content}</Text>
                       <Text fontSize="sm" color="gray.500">
-                        Post ID: {comment.postId}
+                        Post ID: <a href={`/posts/${comment.postId}`} style={{ color: '#319795', textDecoration: 'underline' }} target="_blank" rel="noopener noreferrer">{comment.postId}</a>
                       </Text>
+                      <Text mb={1}>{comment.text}</Text>
                     </Box>
                   ))}
                 </VStack>
