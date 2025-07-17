@@ -134,6 +134,9 @@ export const deletePost = async (
       return;
     }
 
+    // Önce ilgili like'ları sil
+    await prisma.like.deleteMany({ where: { postId: id } });
+
     // Önce ilgili yorumları sil
     await prisma.comment.deleteMany({ where: { postId: id } });
 
