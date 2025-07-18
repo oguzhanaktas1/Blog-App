@@ -1,3 +1,4 @@
+import React from 'react';
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
@@ -23,7 +24,7 @@ interface Comment {
   } | null;
 }
 
-const PostCommentSection = ({ postId }: PostCommentSectionProps) => {
+const PostCommentSection = React.memo(({ postId }: PostCommentSectionProps) => {
   const dispatch = useDispatch();
   const commentsState = useSelector((state: RootState) => state.comments);
   const comments = commentsState.items[postId] || [];
@@ -133,6 +134,6 @@ const PostCommentSection = ({ postId }: PostCommentSectionProps) => {
       </VStack>
     </Box>
   );
-};
+});
 
 export default PostCommentSection;

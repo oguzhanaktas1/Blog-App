@@ -1,4 +1,4 @@
- 
+import React, { useMemo } from 'react';
 import { useEffect } from "react";
 import {
   Box,
@@ -35,7 +35,7 @@ import {
 } from "../store/slices/postsSlice";
 import type { RootState, AppDispatch } from "../store";
 
-const Home = () => {
+const Home = React.memo(() => {
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
   const toast = useToast();
@@ -59,6 +59,16 @@ const Home = () => {
 
     const userEmail = getUserEmail();
     const userRole = getUserRole();
+
+  const sortedPosts = useMemo(() => (
+    posts
+      .slice()
+      .sort(
+        (a, b) =>
+          new Date(b.createdAt).getTime() -
+          new Date(a.createdAt).getTime()
+      )
+  ), [posts]);
 
   return (
     <Box
@@ -119,43 +129,36 @@ const Home = () => {
             </Flex>
           ) : (
             <VStack spacing={8} w="100%" align="stretch" py={8}>
-              {posts
-                .slice()
-                .sort(
-                  (a, b) =>
-                    new Date(b.createdAt).getTime() -
-                    new Date(a.createdAt).getTime()
-                )
-                .map((post) => (
-                  <Box key={post.id}>
-                    <PostContentBox
-                      post={post}
-                      userEmail={userEmail}
-                      userRole={userRole}
-                      onUpdate={(updatedPost) => {
-                        dispatch(updatePostThunk(updatedPost));
-                      }}
-                      onDelete={(postId) => {
-                        dispatch(deletePostThunk(postId));
-                        toast({
-                          title: "Post silindi.",
-                          status: "success",
-                          duration: 3000,
-                          isClosable: true,
-                        });
-                      }}
-                      showBadge={true}
-                      headingSize="lg"
-                      contentLines={4}
-                      showReadMore={true}
-                    >
-                      {/* Add comment section under each post */}
-                      <Box mt={6}>
-                        <PostCommentSection postId={post.id} />
-                      </Box>
-                    </PostContentBox>
-                  </Box>
-                ))}
+              {sortedPosts.map((post) => (
+                <Box key={post.id}>
+                  <PostContentBox
+                    post={post}
+                    userEmail={userEmail}
+                    userRole={userRole}
+                    onUpdate={(updatedPost) => {
+                      dispatch(updatePostThunk(updatedPost));
+                    }}
+                    onDelete={(postId) => {
+                      dispatch(deletePostThunk(postId));
+                      toast({
+                        title: "Post silindi.",
+                        status: "success",
+                        duration: 3000,
+                        isClosable: true,
+                      });
+                    }}
+                    showBadge={true}
+                    headingSize="lg"
+                    contentLines={4}
+                    showReadMore={true}
+                  >
+                    {/* Add comment section under each post */}
+                    <Box mt={6}>
+                      <PostCommentSection postId={post.id} />
+                    </Box>
+                  </PostContentBox>
+                </Box>
+              ))}
             </VStack>
           )}
         </Container>
@@ -191,6 +194,6 @@ const Home = () => {
       </Modal>
     </Box>
   );
-};
+});
 
 export default Home;

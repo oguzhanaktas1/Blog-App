@@ -15,7 +15,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { getUserRole } from "../utils/getUserRole";
 import { getUserInfo } from "../utils/getUserInfo";
 import { FaUserCircle } from "react-icons/fa";
-import React from "react";
+import React, { useCallback } from "react";
 import axios from "axios";
 
 interface UserProfile {
@@ -31,7 +31,7 @@ type NavbarProps = {
   setIsLoggedIn: (val: boolean) => void;
 };
 
-export default function Navbar({ isLoggedIn, setIsLoggedIn }: NavbarProps) {
+const Navbar = React.memo(function Navbar({ isLoggedIn, setIsLoggedIn }: NavbarProps) {
   const navigate = useNavigate();
   const userInfo = getUserInfo();
   const userRole = getUserRole();
@@ -68,13 +68,13 @@ export default function Navbar({ isLoggedIn, setIsLoggedIn }: NavbarProps) {
     fetchUserProfile();
   }, [isLoggedIn]);
 
-  const handleLogout = () => {
+  const handleLogout = useCallback(() => {
     localStorage.removeItem("token");
     setIsLoggedIn(false);
     setProfilePhotoUrl(null);
     setUserProfile(null);
     navigate("/");
-  };
+  }, [setIsLoggedIn, setProfilePhotoUrl, setUserProfile, navigate]);
 
   return (
     <Flex
@@ -199,4 +199,6 @@ export default function Navbar({ isLoggedIn, setIsLoggedIn }: NavbarProps) {
       </Box>
     </Flex>
   );
-}
+});
+
+export default Navbar;

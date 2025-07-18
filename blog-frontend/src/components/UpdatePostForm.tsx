@@ -11,7 +11,7 @@ import {
   IconButton,
   Flex,
 } from "@chakra-ui/react";
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useDispatch } from "react-redux";
 import type { AppDispatch } from "../store";
 import { updatePostThunk } from "../store/slices/postsSlice";
@@ -68,7 +68,7 @@ const UpdatePostForm = ({ post, onClose, onSuccess }: Props) => {
     }
   };
 
-  const handleUpdate = async (e: React.FormEvent) => {
+  const handleUpdate = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
     try {
       // 1. Postu güncelle
@@ -115,7 +115,7 @@ const UpdatePostForm = ({ post, onClose, onSuccess }: Props) => {
         isClosable: true,
       });
     }
-  };
+  }, [dispatch, post.id, title, content, selectedImages, toast, onSuccess, onClose]);
 
   return (
     <Box as="form" onSubmit={handleUpdate}>

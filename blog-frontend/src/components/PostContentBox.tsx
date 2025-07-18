@@ -25,7 +25,7 @@ import {
 import type { ReactNode } from "react";
 import { FiMoreVertical } from "react-icons/fi";
 import UpdatePostForm from "./UpdatePostForm";
-import React from "react";
+import React, { useCallback, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { AiFillHeart, AiOutlineHeart } from "react-icons/ai";
 import { likePost, unlikePost, isPostLiked } from "../services/post";
@@ -61,7 +61,7 @@ interface PostContentBoxProps {
   showReadMore?: boolean; // new prop
 }
 
-const PostContentBox = ({
+const PostContentBox = React.memo(({
   post,
   userEmail,
   userRole,
@@ -75,9 +75,9 @@ const PostContentBox = ({
 }: PostContentBoxProps) => {
   const bg = useColorModeValue("white", "gray.800");
   const boxShadow = useColorModeValue("md", "dark-lg");
-  const isNew =
-    new Date().getTime() - new Date(post.createdAt).getTime() <
-    24 * 60 * 60 * 1000;
+  const isNew = useMemo(() => {
+    return new Date().getTime() - new Date(post.createdAt).getTime() < 24 * 60 * 60 * 1000;
+  }, [post.createdAt]);
   const toast = useToast();
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [editingPost, setEditingPost] =
@@ -99,7 +99,7 @@ const PostContentBox = ({
     };
   }, [post.id, userEmail]);
 
-  const handleLikeToggle = async () => {
+  const handleLikeToggle = useCallback(async () => {
     if (!userEmail) {
       toast({ title: "Giriş yapmalısınız", status: "warning" });
       return;
@@ -118,30 +118,29 @@ const PostContentBox = ({
     } finally {
       setLikeLoading(false);
     }
-  };
+  }, [userEmail, liked, post.id, toast]);
 
   const isAdmin = userRole === "admin";
   const isPostOwner = userEmail === post.author?.email;
   const canModify = isAdmin || isPostOwner;
 
-  const handleUpdate = (
+  const handleUpdate = useCallback((
     updated: {
       id: number;
       title: string;
       content: string;
     } & Partial<PostContentBoxPost>
   ) => {
-    // post'un diğer alanlarını koru
     onUpdate?.({
       ...post,
       ...updated,
     });
     onClose();
-  };
+  }, [onUpdate, post, onClose]);
 
-  const handleDelete = () => {
+  const handleDelete = useCallback(() => {
     onDelete?.(post.id);
-  };
+  }, [onDelete, post.id]);
 
   const renderPostMenu = () => (
     <Menu>
@@ -187,6 +186,17 @@ const PostContentBox = ({
     </Menu>
   );
 
+  const authorName = useMemo(() => post.author?.name ?? "Bilinmiyor", [post.author?.name]);
+  const authorAvatar = useMemo(() => {
+    if (post.author?.profilePhoto) {
+      return post.author.profilePhoto.startsWith("http")
+        ? post.author.profilePhoto
+        : `${import.meta.env.VITE_API_BASE_URL || ""}${post.author.profilePhoto}`;
+    }
+    return undefined;
+  }, [post.author?.profilePhoto]);
+  const images = useMemo(() => post.images || [], [post.images]);
+
   return (
     <Box
       p={{ base: 4, md: 8 }}
@@ -224,16 +234,10 @@ const PostContentBox = ({
 
       <Text fontSize="sm" color="gray.500" mb={2}>
         {/* Yazar Avatarı */}
-        {post.author?.profilePhoto ? (
+        {authorAvatar ? (
           <Avatar
-            src={
-              post.author.profilePhoto.startsWith("http")
-                ? post.author.profilePhoto
-                : `${import.meta.env.VITE_API_BASE_URL || ""}${
-                    post.author.profilePhoto
-                  }`
-            }
-            name={post.author.name || undefined}
+            src={authorAvatar}
+            name={authorName}
             size="sm"
             mr={2}
             display="inline-block"
@@ -241,20 +245,19 @@ const PostContentBox = ({
           />
         ) : (
           <Avatar
-            name={post.author?.name || undefined}
+            name={authorName}
             size="sm"
             mr={2}
             display="inline-block"
             verticalAlign="middle"
           />
         )}
-        {post.author?.name ?? "Bilinmiyor"} -{" "}
-        {new Date(post.createdAt).toLocaleDateString()}
+        {authorName} - {new Date(post.createdAt).toLocaleDateString()}
       </Text>
 
-      {post.images && post.images.length > 0 && (
+      {images.length > 0 && (
         <Flex mb={4} gap={2} wrap="wrap">
-          {post.images.map((img, idx) => (
+          {images.map((img, idx) => (
             <img
               key={img.id ?? idx}
               src={
@@ -329,6 +332,6 @@ const PostContentBox = ({
       </Modal>
     </Box>
   );
-};
+});
 
 export default PostContentBox;

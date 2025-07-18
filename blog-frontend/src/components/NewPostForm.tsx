@@ -9,7 +9,7 @@ import {
   Heading,
   useToast,
 } from "@chakra-ui/react";
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "../utils/axios";
 import type { Post } from "../services/post";
@@ -27,7 +27,7 @@ const NewPostForm = ({ onSuccess, onClose }: NewPostFormProps) => {
   const toast = useToast();
   const navigate = useNavigate();
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
     try {
       const token = localStorage.getItem("token");
@@ -76,7 +76,7 @@ const NewPostForm = ({ onSuccess, onClose }: NewPostFormProps) => {
         isClosable: true,
       });
     }
-  };
+  }, [title, content, selectedImages, onSuccess, onClose, navigate, toast]);
 
   return (
     <Box maxW="2xl" mx="auto" py={10}>
