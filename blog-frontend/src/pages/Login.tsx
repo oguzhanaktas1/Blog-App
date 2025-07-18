@@ -127,7 +127,7 @@ export default function LoginPage({ setIsLoggedIn }: { setIsLoggedIn: (val: bool
                   <InputRightElement>
                     <IconButton
                       aria-label={showPassword ? "Şifreyi gizle" : "Şifreyi göster"}
-                      icon={showPassword ? <ViewOffIcon /> : <ViewIcon />}
+                      icon={showPassword ? <ViewIcon /> : <ViewOffIcon />}
                       onClick={toggleShowPassword}
                       variant="ghost"
                       size="sm"
