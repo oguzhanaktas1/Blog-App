@@ -9,9 +9,13 @@ import {
   unlikePost,
   isPostLiked,
   getLikedPosts,
+  uploadPostImage
 } from "../controllers/postController";
 import { validatePost } from "../middlewares/postValidation";
 import { authenticateToken } from "../middlewares/authMiddleware";
+import multer from "multer";
+
+const upload = multer({ dest: "uploads/" });
 
 const router = express.Router();
 
@@ -24,5 +28,5 @@ router.delete("/:id", authenticateToken, deletePost);
 router.post("/:id/like", authenticateToken, likePost);
 router.delete("/:id/like", authenticateToken, unlikePost);
 router.get("/:id/like", authenticateToken, isPostLiked);
-
+router.post("/:id/upload-image", authenticateToken, upload.array("images", 10), uploadPostImage);
 export default router;

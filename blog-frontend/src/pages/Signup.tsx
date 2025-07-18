@@ -103,31 +103,31 @@ export default function SignupPage() {
               handleSubmit();
             }}
           >
-            <VStack spacing={4}>
+          <VStack spacing={4}>
               <FormControl id="name" isRequired>
                 <FormLabel>Adınız Soyadınız</FormLabel>
-                <Input
-                  placeholder="Adınız Soyadınız"
-                  name="name"
-                  value={form.name}
-                  onChange={handleChange}
-                  size="lg"
-                  variant="filled"
-                  _focus={{ borderColor: "teal.500", boxShadow: "0 0 0 1px teal.500" }}
-                />
+            <Input
+              placeholder="Adınız Soyadınız"
+              name="name"
+              value={form.name}
+              onChange={handleChange}
+              size="lg"
+              variant="filled"
+              _focus={{ borderColor: "teal.500", boxShadow: "0 0 0 1px teal.500" }}
+            />
               </FormControl>
               <FormControl id="email" isRequired isInvalid={emailTouched && !emailValid}>
                 <FormLabel>E-posta Adresiniz</FormLabel>
-                <Input
-                  placeholder="E-posta Adresiniz"
-                  name="email"
-                  type="email"
-                  value={form.email}
-                  onChange={handleChange}
+            <Input
+              placeholder="E-posta Adresiniz"
+              name="email"
+              type="email"
+              value={form.email}
+              onChange={handleChange}
                   onBlur={() => setEmailTouched(true)}
-                  size="lg"
-                  variant="filled"
-                  _focus={{ borderColor: "teal.500", boxShadow: "0 0 0 1px teal.500" }}
+              size="lg"
+              variant="filled"
+              _focus={{ borderColor: "teal.500", boxShadow: "0 0 0 1px teal.500" }}
                   autoComplete="username"
                   pattern="^[^@\s]+@[^@\s]+\.[^@\s]+$"
                 />
@@ -135,41 +135,41 @@ export default function SignupPage() {
               </FormControl>
               <FormControl id="password" isRequired>
                 <FormLabel>Şifreniz</FormLabel>
-                <InputGroup size="lg" variant="filled" w="100%">
-                  <Input
-                    placeholder="Şifreniz"
-                    name="password"
-                    type={showPassword ? "text" : "password"}
-                    value={form.password}
-                    onChange={handleChange}
-                    _focus={{ borderColor: "teal.500", boxShadow: "0 0 0 1px teal.500" }}
+            <InputGroup size="lg" variant="filled" w="100%">
+              <Input
+                placeholder="Şifreniz"
+                name="password"
+                type={showPassword ? "text" : "password"}
+                value={form.password}
+                onChange={handleChange}
+                _focus={{ borderColor: "teal.500", boxShadow: "0 0 0 1px teal.500" }}
                     autoComplete="new-password"
-                  />
-                  <InputRightElement>
-                    <IconButton
-                      aria-label={showPassword ? "Şifreyi gizle" : "Şifreyi göster"}
+              />
+              <InputRightElement>
+                <IconButton
+                  aria-label={showPassword ? "Şifreyi gizle" : "Şifreyi göster"}
                       icon={showPassword ? <ViewIcon /> : <ViewOffIcon />}
-                      onClick={toggleShowPassword}
-                      variant="ghost"
-                      size="sm"
-                      _hover={{ bg: "transparent" }}
-                      _active={{ bg: "transparent" }}
-                    />
-                  </InputRightElement>
-                </InputGroup>
+                  onClick={toggleShowPassword}
+                  variant="ghost"
+                  size="sm"
+                  _hover={{ bg: "transparent" }}
+                  _active={{ bg: "transparent" }}
+                />
+              </InputRightElement>
+            </InputGroup>
               </FormControl>
-              <Button
-                colorScheme="teal"
-                size="lg"
-                width="full"
+            <Button
+              colorScheme="teal"
+              size="lg"
+              width="full"
                 type="submit"
-                isLoading={isLoading}
-                _hover={{ bg: "teal.500" }}
-                _active={{ bg: "teal.600" }}
-              >
-                Kayıt Ol
-              </Button>
-            </VStack>
+              isLoading={isLoading}
+              _hover={{ bg: "teal.500" }}
+              _active={{ bg: "teal.600" }}
+            >
+              Kayıt Ol
+            </Button>
+          </VStack>
           </form>
           <Text mt={6} color="gray.600" fontSize="sm">
             Zaten hesabınız var mı?{" "}

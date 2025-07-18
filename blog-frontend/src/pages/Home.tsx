@@ -58,8 +58,8 @@ const Home = () => {
     }
   };
 
-  const userEmail = getUserEmail();
-  const userRole = getUserRole();
+    const userEmail = getUserEmail();
+    const userRole = getUserRole();
 
   return (
     <Box

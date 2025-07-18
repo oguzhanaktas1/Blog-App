@@ -2,6 +2,8 @@ import { Request, Response, NextFunction } from "express";
 import { PrismaClient } from "@prisma/client";
 import { validationResult } from "express-validator";
 import { AuthRequest } from "../middlewares/authMiddleware";
+import path from "path";
+import fs from "fs";
 
 const prisma = new PrismaClient();
 
@@ -20,6 +22,7 @@ export const getAllPosts = async (
             profilePhoto: true,
           },
         },
+        images: true,
       },
     });
     res.json(posts);
@@ -45,6 +48,7 @@ export const getPostById = async (
             profilePhoto: true,
           },
         },
+        images: true,
       },
     });
     if (!post) {
@@ -93,7 +97,7 @@ export const updatePost = async (
     const id = Number(req.params.id);
     const { title, content } = req.body;
 
-    const post = await prisma.post.findUnique({ where: { id } });
+    const post = await prisma.post.findUnique({ where: { id }, include: { images: true } });
 
     const isOwner = post?.authorId === req.userId;
     const isAdmin = req.userRole === "admin";
@@ -104,14 +108,28 @@ export const updatePost = async (
       return;
     }
 
+    // Eğer yeni bir fotoğraf yüklenmişse (req.file varsa), eski fotoğrafı sil ve yenisini ekle
+    if (req.file) {
+      // Eski fotoğrafları sil
+      for (const img of post.images) {
+        if (img.url && fs.existsSync(`.${img.url}`)) {
+          fs.unlinkSync(`.${img.url}`);
+        }
+        await prisma.image.delete({ where: { id: img.id } });
+      }
+      // Yeni fotoğrafı kaydet
+      const imageUrl = `/uploads/${req.file.filename}`;
+      await prisma.image.create({ data: { url: imageUrl, postId: id, userId: req.userId } });
+    }
+
     const updated = await prisma.post.update({
       where: { id },
       data: { title, content },
       include: {
         author: { select: { name: true, email: true, profilePhoto: true } },
+        images: true,
       },
     });
-    
     res.json(updated);
   } catch (error) {
     next(error);
@@ -125,13 +143,21 @@ export const deletePost = async (
 ): Promise<void> => {
   try {
     const id = Number(req.params.id);
-    const post = await prisma.post.findUnique({ where: { id } });
+    const post = await prisma.post.findUnique({ where: { id }, include: { images: true } });
 
     const isOwner = post?.authorId === req.userId;
     const isAdmin = req.userRole === "admin";
     if (!post || (!isOwner && !isAdmin)) {
       res.status(403).json({ error: "Yetkisiz işlem" });
       return;
+    }
+
+    // Önce ilgili fotoğrafları sil (hem DB'den hem dosya sisteminden)
+    for (const img of post.images) {
+      if (img.url && fs.existsSync(`.${img.url}`)) {
+        fs.unlinkSync(`.${img.url}`);
+      }
+      await prisma.image.delete({ where: { id: img.id } });
     }
 
     // Önce ilgili like'ları sil
@@ -211,5 +237,33 @@ export const getLikedPosts = async (req: AuthRequest, res: Response, next: NextF
     return;
   } catch (err) {
     next(err);
+  }
+};
+
+export const uploadPostImage = async (req: any, res: Response): Promise<void> => {
+  const postId = Number(req.params.id);
+  const files = req.files as Express.Multer.File[];
+  if (!files || files.length === 0) {
+    res.status(400).json({ error: "No files uploaded" });
+    return;
+  }
+  try {
+    const urls: string[] = [];
+    for (const file of files) {
+      const imageUrl = `/uploads/${file.filename}`;
+      await prisma.image.create({
+        data: {
+          url: imageUrl,
+          postId: postId,
+          userId: req.userId,
+        },
+      });
+      urls.push(imageUrl);
+    }
+    res.status(201).json({ urls });
+    return;
+  } catch (err) {
+    res.status(500).json({ error: "Image upload failed" });
+    return;
   }
 };

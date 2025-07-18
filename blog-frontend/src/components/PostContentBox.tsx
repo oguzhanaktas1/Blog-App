@@ -42,6 +42,7 @@ export interface PostContentBoxPost {
   createdAt: string;
   author?: Author;
   authorId?: number;
+  images?: { url: string }[];
 }
 
 interface PostContentBoxProps {
@@ -90,7 +91,9 @@ const PostContentBox = ({
         })
         .catch(() => setLiked(false));
     }
-    return () => { mounted = false; };
+    return () => {
+      mounted = false;
+    };
   }, [post.id, userEmail]);
 
   const handleLikeToggle = async () => {
@@ -207,12 +210,17 @@ const PostContentBox = ({
         </Flex>
       </Flex>
 
-      
       <Text fontSize="sm" color="gray.500" mb={2}>
         {/* Yazar Avatarı */}
         {post.author?.profilePhoto ? (
           <Avatar
-            src={post.author.profilePhoto.startsWith("http") ? post.author.profilePhoto : `${import.meta.env.VITE_API_BASE_URL || ""}${post.author.profilePhoto}`}
+            src={
+              post.author.profilePhoto.startsWith("http")
+                ? post.author.profilePhoto
+                : `${import.meta.env.VITE_API_BASE_URL || ""}${
+                    post.author.profilePhoto
+                  }`
+            }
             name={post.author.name || undefined}
             size="sm"
             mr={2}
@@ -231,6 +239,23 @@ const PostContentBox = ({
         {post.author?.name ?? "Bilinmiyor"} -{" "}
         {new Date(post.createdAt).toLocaleDateString()}
       </Text>
+
+      {post.images && post.images.length > 0 && (
+        <Box mb={4}>
+          <img
+            src={
+              post.images[0].url.startsWith("http")
+                ? post.images[0].url
+                : `${import.meta.env.VITE_API_BASE_URL || ""}${
+                    post.images[0].url
+                  }`
+            }
+            alt="Post görseli"
+            style={{ maxWidth: "100%", borderRadius: 8 }}
+          />
+        </Box>
+      )}
+
       <Text
         noOfLines={contentLines}
         color={useColorModeValue("gray.700", "gray.300")}
