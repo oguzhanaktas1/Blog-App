@@ -3,6 +3,7 @@ interface TokenPayload {
   email: string;
   role?: string;
   userId?: number;
+  profilePhoto?: string;
 }
 
 function base64UrlDecode(str: string) {
@@ -11,9 +12,22 @@ function base64UrlDecode(str: string) {
   return decodeURIComponent(escape(window.atob(str)));
 }
 
-export function getUserInfo(): { name: string | null; email: string | null; role: string | null; userId: number | null } {
+export function getUserInfo(): {
+  name: string | null;
+  email: string | null;
+  role: string | null;
+  userId: number | null;
+  profilePhoto: string | null;
+} {
   const token = localStorage.getItem("token");
-  if (!token) return { name: null, email: null, role: null, userId: null };
+  if (!token)
+    return {
+      name: null,
+      email: null,
+      role: null,
+      userId: null,
+      profilePhoto: null,
+    };
 
   try {
     const payload = token.split('.')[1];
@@ -23,8 +37,15 @@ export function getUserInfo(): { name: string | null; email: string | null; role
       email: decoded.email || null,
       role: decoded.role || null,
       userId: decoded.userId || null,
+      profilePhoto: decoded.profilePhoto || null, // eklendi
     };
   } catch {
-    return { name: null, email: null, role: null, userId: null };
+    return {
+      name: null,
+      email: null,
+      role: null,
+      userId: null,
+      profilePhoto: null,
+    };
   }
 }

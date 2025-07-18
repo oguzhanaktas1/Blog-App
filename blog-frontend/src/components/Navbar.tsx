@@ -15,6 +15,16 @@ import { Link, useNavigate } from "react-router-dom";
 import { getUserRole } from "../utils/getUserRole";
 import { getUserInfo } from "../utils/getUserInfo";
 import { FaUserCircle } from "react-icons/fa";
+import React from "react";
+import axios from "axios";
+
+interface UserProfile {
+  id: number;
+  name: string;
+  email: string;
+  profilePhoto: string | null;
+  role: string;
+}
 
 type NavbarProps = {
   isLoggedIn: boolean;
@@ -24,11 +34,45 @@ type NavbarProps = {
 export default function Navbar({ isLoggedIn, setIsLoggedIn }: NavbarProps) {
   const navigate = useNavigate();
   const userInfo = getUserInfo();
-  const userRole = getUserRole(); // ✅ Rolü al
+  const userRole = getUserRole();
+
+  // Profil fotoğrafı ve kullanıcı bilgisi için state
+  const [profilePhotoUrl, setProfilePhotoUrl] = React.useState<string | null>(null);
+  const [userProfile, setUserProfile] = React.useState<UserProfile | null>(null);
+
+  // Profil bilgisini backend'den çek
+  React.useEffect(() => {
+    if (!isLoggedIn) {
+      setProfilePhotoUrl(null);
+      setUserProfile(null);
+      return;
+    }
+    const fetchUserProfile = async () => {
+      try {
+        const BACKEND_URL = import.meta.env.VITE_API_BASE_URL;
+        const token = localStorage.getItem("token");
+        const res = await axios.get<UserProfile>(`${BACKEND_URL}/api/profile`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setUserProfile(res.data);
+        if (res.data.profilePhoto) {
+          setProfilePhotoUrl(`${BACKEND_URL}${res.data.profilePhoto}`);
+        } else {
+          setProfilePhotoUrl(null);
+        }
+      } catch {
+        setUserProfile(null);
+        setProfilePhotoUrl(null);
+      }
+    };
+    fetchUserProfile();
+  }, [isLoggedIn]);
 
   const handleLogout = () => {
     localStorage.removeItem("token");
     setIsLoggedIn(false);
+    setProfilePhotoUrl(null);
+    setUserProfile(null);
     navigate("/");
   };
 
@@ -125,8 +169,9 @@ export default function Navbar({ isLoggedIn, setIsLoggedIn }: NavbarProps) {
               _focus={{ boxShadow: "none" }}
             >
               <Avatar
-                icon={<FaUserCircle style={{ width: "70%", height: "70%" }} />}
-                name={userInfo.name || undefined}
+                icon={!profilePhotoUrl ? <FaUserCircle style={{ width: "70%", height: "70%" }} /> : undefined}
+                name={userProfile?.name || userInfo.name || undefined}
+                src={profilePhotoUrl || undefined}
                 size="md"
                 bg="gray.200"
                 color="teal.600"
@@ -135,17 +180,8 @@ export default function Navbar({ isLoggedIn, setIsLoggedIn }: NavbarProps) {
             </MenuButton>
             <MenuList color="gray.800" minW="220px">
               <Box px={4} py={3} textAlign="center">
-                <Avatar
-                  icon={<FaUserCircle style={{ width: "70%", height: "70%" }} />}
-                  name={userInfo.name || undefined}
-                  size="lg"
-                  mb={2}
-                  bg="gray.200"
-                  color="teal.600"
-                  overflow="hidden"
-                />
-                <Text fontWeight="bold">{userInfo.name || "Kullanıcı"}</Text>
-                <Text fontSize="sm" color="gray.500">{userInfo.email || "-"}</Text>
+                <Text fontWeight="bold">{userProfile?.name || userInfo.name || "Kullanıcı"}</Text>
+                <Text fontSize="sm" color="gray.500">{userProfile?.email || userInfo.email || "-"}</Text>
                 <Text fontSize="sm" color="gray.400" mt={1}>
                   Role: <b>{userRole}</b>
                 </Text>

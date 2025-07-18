@@ -19,6 +19,7 @@ import {
   ModalBody,
   useToast,
   Button,
+  Avatar,
 } from "@chakra-ui/react";
 import type { ReactNode } from "react";
 import { FiMoreVertical } from "react-icons/fi";
@@ -31,6 +32,7 @@ import { likePost, unlikePost, isPostLiked } from "../services/post";
 interface Author {
   name?: string | null;
   email?: string | null;
+  profilePhoto?: string | null;
 }
 
 export interface PostContentBoxPost {
@@ -204,7 +206,28 @@ const PostContentBox = ({
           {renderPostMenu()}
         </Flex>
       </Flex>
+
+      
       <Text fontSize="sm" color="gray.500" mb={2}>
+        {/* Yazar Avatarı */}
+        {post.author?.profilePhoto ? (
+          <Avatar
+            src={post.author.profilePhoto.startsWith("http") ? post.author.profilePhoto : `${import.meta.env.VITE_API_BASE_URL || ""}${post.author.profilePhoto}`}
+            name={post.author.name || undefined}
+            size="sm"
+            mr={2}
+            display="inline-block"
+            verticalAlign="middle"
+          />
+        ) : (
+          <Avatar
+            name={post.author?.name || undefined}
+            size="sm"
+            mr={2}
+            display="inline-block"
+            verticalAlign="middle"
+          />
+        )}
         {post.author?.name ?? "Bilinmiyor"} -{" "}
         {new Date(post.createdAt).toLocaleDateString()}
       </Text>

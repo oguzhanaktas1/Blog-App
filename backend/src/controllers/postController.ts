@@ -17,6 +17,7 @@ export const getAllPosts = async (
           select: {
             name: true,
             email: true,
+            profilePhoto: true,
           },
         },
       },
@@ -36,11 +37,12 @@ export const getPostById = async (
     const id = Number(req.params.id);
     const post = await prisma.post.findUnique({
       where: { id },
-      include: {   // <-- burada author bilgisini ekle
+      include: {
         author: {
           select: {
             name: true,
-            email: true, // istersen sadece name de olabilir
+            email: true,
+            profilePhoto: true,
           },
         },
       },
@@ -72,6 +74,9 @@ export const createPost = async (
     const authorId = req.userId!;
     const newPost = await prisma.post.create({
       data: { title, content, authorId },
+      include: {
+        author: { select: { name: true, email: true, profilePhoto: true } },
+      },
     });
     res.status(201).json(newPost);
   } catch (error) {
@@ -103,12 +108,7 @@ export const updatePost = async (
       where: { id },
       data: { title, content },
       include: {
-        author: {
-          select: {
-            name: true,
-            email: true, // veya sadece name: true da olur
-          },
-        },
+        author: { select: { name: true, email: true, profilePhoto: true } },
       },
     });
     
@@ -200,7 +200,7 @@ export const getLikedPosts = async (req: AuthRequest, res: Response, next: NextF
       include: {
         post: {
           include: {
-            author: { select: { name: true, email: true } },
+            author: { select: { name: true, email: true, profilePhoto: true } },
           },
         },
       },

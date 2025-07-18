@@ -15,25 +15,28 @@ datasource db {
 }
 
 model User {
-  id       Int       @id @default(autoincrement())
-  name     String
-  email    String    @unique
-  password String
-  role     String  @default("user")
-  posts    Post[]
-  comments Comment[]
-  likes    Like[]
+  id           Int       @id @default(autoincrement())
+  name         String
+  email        String    @unique
+  password     String
+  role         String    @default("user")
+  profilePhoto String?   // Profil fotoğrafı URL'si (opsiyonel)
+  posts        Post[]
+  comments     Comment[]
+  likes        Like[]
+  images       Image[]   // Kullanıcının yüklediği resimler
 }
 
 model Post {
-  id        Int       @id @default(autoincrement())
-  title     String
-  content   String
-  authorId  Int
-  author    User      @relation(fields: [authorId], references: [id])
-  comments  Comment[]
-  createdAt DateTime  @default(now())
-  likes     Like[]
+  id         Int       @id @default(autoincrement())
+  title      String
+  content    String
+  authorId   Int
+  author     User      @relation(fields: [authorId], references: [id])
+  comments   Comment[]
+  createdAt  DateTime  @default(now())
+  likes      Like[]
+  images     Image[]   // Gönderiye eklenen resimler
 }
 
 model Comment {
@@ -54,4 +57,14 @@ model Like {
   postId  Int
 
   @@unique([userId, postId])
+}
+
+model Image {
+  id        Int      @id @default(autoincrement())
+  url       String   // Görselin dosya yolu veya URL'si
+  userId    Int?     // Kullanıcıya ait olabilir
+  postId    Int?     // Gönderiye ait olabilir
+  user      User?    @relation(fields: [userId], references: [id])
+  post      Post?    @relation(fields: [postId], references: [id])
+  uploadedAt DateTime @default(now())
 }
