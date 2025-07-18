@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import {
   Box,
   Flex,
@@ -42,7 +43,9 @@ export interface PostContentBoxPost {
   createdAt: string;
   author?: Author;
   authorId?: number;
-  images?: { url: string }[];
+  images?: {
+    id: number; url: string 
+}[];
 }
 
 interface PostContentBoxProps {
@@ -121,9 +124,18 @@ const PostContentBox = ({
   const isPostOwner = userEmail === post.author?.email;
   const canModify = isAdmin || isPostOwner;
 
-  const handleUpdate = (updatedPost: PostContentBoxPost) => {
-    setEditingPost(null);
-    onUpdate?.(updatedPost);
+  const handleUpdate = (
+    updated: {
+      id: number;
+      title: string;
+      content: string;
+    } & Partial<PostContentBoxPost>
+  ) => {
+    // post'un diğer alanlarını koru
+    onUpdate?.({
+      ...post,
+      ...updated,
+    });
     onClose();
   };
 
@@ -241,19 +253,20 @@ const PostContentBox = ({
       </Text>
 
       {post.images && post.images.length > 0 && (
-        <Box mb={4}>
-          <img
-            src={
-              post.images[0].url.startsWith("http")
-                ? post.images[0].url
-                : `${import.meta.env.VITE_API_BASE_URL || ""}${
-                    post.images[0].url
-                  }`
-            }
-            alt="Post görseli"
-            style={{ maxWidth: "100%", borderRadius: 8 }}
-          />
-        </Box>
+        <Flex mb={4} gap={2} wrap="wrap">
+          {post.images.map((img, idx) => (
+            <img
+              key={img.id ?? idx}
+              src={
+                img.url.startsWith("http")
+                  ? img.url
+                  : `${import.meta.env.VITE_API_BASE_URL || ""}${img.url}`
+              }
+              alt={`Post görseli ${idx + 1}`}
+              style={{ maxWidth: 180, borderRadius: 8 }}
+            />
+          ))}
+        </Flex>
       )}
 
       <Text
@@ -298,12 +311,17 @@ const PostContentBox = ({
           <ModalBody>
             {editingPost && (
               <UpdatePostForm
-                post={editingPost}
-                onClose={onClose}
-                onSuccess={(updated) => {
-                  // Merge with previous editingPost to ensure all required fields
-                  handleUpdate({ ...editingPost, ...updated });
+                post={{
+                  id: post.id,
+                  title: post.title,
+                  content: post.content,
+                  images: post.images?.map((img, idx) => ({
+                    id: (img as any).id ?? idx, // backend'den id geliyorsa kullan, yoksa index
+                    url: img.url,
+                  })),
                 }}
+                onClose={onClose}
+                onSuccess={handleUpdate}
               />
             )}
           </ModalBody>

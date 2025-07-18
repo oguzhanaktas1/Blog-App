@@ -13,6 +13,7 @@ export interface Post {
   authorId: number;
   author?: User;  // Eğer backend'den geliyorsa, opsiyonel olarak ekle
   createdAt: string;
+  images?: { id: number; url: string }[];
 }
 
 export const getPosts = async (): Promise<Post[]> => {

@@ -267,3 +267,26 @@ export const uploadPostImage = async (req: any, res: Response): Promise<void> =>
     return;
   }
 };
+
+export const deletePostImage = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const imageId = Number(req.params.id);
+    const image = await prisma.image.findUnique({ where: { id: imageId } });
+    if (!image) {
+      res.status(404).json({ error: "Image not found" });
+      return;
+    }
+    // Dosyayı sil
+    try {
+      if (image.url && fs.existsSync(`.${image.url}`)) {
+        fs.unlinkSync(`.${image.url}`);
+      }
+    } catch (err) {
+      console.error("Dosya silinemedi:", err);
+    }
+    await prisma.image.delete({ where: { id: imageId } });
+    res.status(204).send();
+  } catch (err) {
+    res.status(500).json({ error: "Image delete failed" });
+  }
+};
