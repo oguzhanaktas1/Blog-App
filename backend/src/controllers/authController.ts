@@ -24,8 +24,7 @@ export const signup = async (req: Request, res: Response, next: NextFunction) =>
     
     res.status(201).json({ token, user: { id: user.id, name: user.name, email: user.email } });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Something went wrong" });
+    next(err);
   }
 };
 
@@ -46,7 +45,6 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
     
     res.json({ token, user: { id: user.id, name: user.name, email: user.email } });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Something went wrong" });
+    next(err);
   }
 };

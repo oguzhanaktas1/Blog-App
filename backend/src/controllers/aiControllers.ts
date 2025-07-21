@@ -15,8 +15,7 @@ export const generateBlogPost = async (
     const { prompt } = req.body;
 
     if (!prompt) {
-      res.status(400).json({ error: "Prompt is required" });
-      return; // return burada sadece fonksiyonu bitirmek için
+      return next({ status: 400, message: "Prompt is required" });
     }
 
     const model = genAI.getGenerativeModel({ model: "gemini-2.5-pro" });
@@ -28,6 +27,6 @@ export const generateBlogPost = async (
     res.status(200).json({ content: text });
   } catch (error: any) {
     console.error("AI Error:", error.message);
-    res.status(500).json({ error: "Failed to generate content" });
+    next(error);
   }
 };

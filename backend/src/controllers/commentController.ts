@@ -1,11 +1,11 @@
-import { Request, Response } from "express";
+import { Request, Response, NextFunction } from "express";
 import { prisma } from "../prisma/client";
 import type { AuthRequest } from "../middlewares/authMiddleware";
 
-export const getCommentsByPost = async (req: Request, res: Response) => {
+export const getCommentsByPost = async (req: Request, res: Response, next: NextFunction) => {
   const postId = parseInt(req.params.postId);
   if (isNaN(postId)) {
-    return res.status(400).json({ error: "Geçersiz post ID" });
+    return next({ status: 400, message: "Geçersiz post ID" });
   }
   try {
     const comments = await prisma.comment.findMany({
@@ -36,24 +36,23 @@ export const getCommentsByPost = async (req: Request, res: Response) => {
       }))
     );
   } catch (err) {
-    console.error("Yorumlar alınamadı:", err);
-    res.status(500).json({ error: "Yorumlar alınamadı" });
+    next(err);
   }
 };
 
-export const addComment = async (req: AuthRequest, res: Response) => {
+export const addComment = async (req: AuthRequest, res: Response, next: NextFunction) => {
   console.log("addComment userId:", req.userId, "role:", req.userRole);
   const postId = parseInt(req.params.postId);
   const userId = req.userId;
   const { text } = req.body;
   if (isNaN(postId)) {
-    return res.status(400).json({ error: "Geçersiz post ID" });
+    return next({ status: 400, message: "Geçersiz post ID" });
   }
   if (!userId) {
-    return res.status(401).json({ error: "Kimlik doğrulama gerekli" });
+    return next({ status: 401, message: "Kimlik doğrulama gerekli" });
   }
   if (!text || text.trim() === "") {
-    return res.status(400).json({ error: "Yorum boş olamaz" });
+    return next({ status: 400, message: "Yorum boş olamaz" });
   }
   try {
     const newComment = await prisma.comment.create({
@@ -86,39 +85,39 @@ export const addComment = async (req: AuthRequest, res: Response) => {
         : null,
     });
   } catch (err) {
-    console.error("Yorum oluşturulamadı:", err);
-    res.status(500).json({ error: "Yorum oluşturulamadı" });
+    next(err);
   }
 };
 
-export const deleteComment = async (req: AuthRequest, res: Response) => {
+export const deleteComment = async (req: AuthRequest, res: Response, next: NextFunction) => {
   const commentId = parseInt(req.params.commentId);
   const userId = req.userId;
   const userRole = req.userRole;
   if (isNaN(commentId)) {
-    return res.status(400).json({ error: "Geçersiz yorum ID" });
+    return next({ status: 400, message: "Geçersiz yorum ID" });
   }
   if (!userId) {
-    return res.status(401).json({ error: "Kimlik doğrulama gerekli" });
+    return next({ status: 401, message: "Kimlik doğrulama gerekli" });
   }
   try {
     const comment = await prisma.comment.findUnique({
       where: { id: commentId },
     });
     if (!comment) {
-      return res.status(404).json({ error: "Yorum bulunamadı" });
+      return next({ status: 404, message: "Yorum bulunamadı" });
     }
     const isOwner = comment.authorId === userId;
     const isAdmin = userRole === "admin";
     if (!isOwner && !isAdmin) {
-      return res.status(403).json({ error: "Bu yorumu silmeye yetkiniz yok" });
+      return next({ status: 403, message: "Bu yorumu silmeye yetkiniz yok" });
     }
     await prisma.comment.delete({
       where: { id: commentId },
     });
     res.json({ message: "Yorum silindi" });
   } catch (err) {
-    console.error("Yorum silinemedi:", err);
-    res.status(500).json({ error: "Yorum silinemedi" });
+    next(err);
   }
 }; 
+
+

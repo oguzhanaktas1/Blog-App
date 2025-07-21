@@ -1,13 +1,13 @@
-import { Request, Response } from "express";
+import { Request, Response, NextFunction } from "express";
 import { prisma } from "../prisma/client"; // kendi prisma client yolunu kullan
 
 export const uploadProfilePhoto = async (
   req: Request,
-  res: Response
+  res: Response,
+  next: NextFunction
 ): Promise<void> => {
   if (!req.file) {
-    res.status(400).json({ error: "No file uploaded" });
-    return;
+    return next({ status: 400, message: "No file uploaded" });
   }
 
   const fileName = req.file.filename;
@@ -15,30 +15,26 @@ export const uploadProfilePhoto = async (
   const userId = Number(req.body.userId);
 
   if (!userId) {
-    res.status(400).json({ error: "User ID is required" });
-    return;
+    return next({ status: 400, message: "User ID is required" });
   }
 
-  // Kullanıcının profil fotoğrafını güncelle
   try {
     await prisma.user.update({
       where: { id: userId },
       data: { profilePhoto: imageUrl },
     });
-
     res.json({ imageUrl });
   } catch (error) {
-    console.error("Profile photo upload error:", error); // <-- Hata detayını logla
-    res.status(500).json({ error: "Database error", details: error });
+    // Prisma hatalarını doğrudan next(error) ile ilet
+    next(error);
   }
 };
 
-export const getProfile = async (req: any, res: Response): Promise<void> => {
+export const getProfile = async (req: any, res: Response, next: NextFunction): Promise<void> => {
   try {
     const userId = req.userId;
     if (!userId) {
-      res.status(401).json({ error: "Unauthorized" });
-      return;
+      return next({ status: 401, message: "Unauthorized" });
     }
     const user = await prisma.user.findUnique({
       where: { id: userId },
@@ -51,13 +47,10 @@ export const getProfile = async (req: any, res: Response): Promise<void> => {
       },
     });
     if (!user) {
-      res.status(404).json({ error: "User not found" });
-      return;
+      return next({ status: 404, message: "User not found" });
     }
     res.json(user);
-    return;
   } catch (error) {
-    res.status(500).json({ error: "Server error" });
-    return;
+    next(error);
   }
 };

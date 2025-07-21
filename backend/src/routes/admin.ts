@@ -12,7 +12,7 @@ router.get(
   "/users",
   authenticateToken,
   authorizeRole("admin"),
-  async (req, res) => {
+  async (req, res, next) => {
     try {
       const users = await prisma.user.findMany({
         select: {
@@ -24,7 +24,7 @@ router.get(
       });
       res.json(users);
     } catch (err) {
-      res.status(500).json({ error: "Kullanıcılar alınamadı." });
+      next(err);
     }
   }
 );
@@ -34,7 +34,7 @@ router.get(
   "/users/:id",
   authenticateToken,
   authorizeRole("admin"),
-  async (req, res) => {
+  async (req, res, next) => {
     const userId = Number(req.params.id);
     try {
       const user = await prisma.user.findUnique({
@@ -46,14 +46,12 @@ router.get(
       });
 
       if (!user) {
-        res.status(404).json({ error: "Kullanıcı bulunamadı" });
-        return;
+        return next({ status: 404, message: "Kullanıcı bulunamadı" });
       }
 
       res.json(user);
     } catch (err) {
-      res.status(500).json({ error: "Hata" });
-      return;
+      next(err);
     }
   }
 );

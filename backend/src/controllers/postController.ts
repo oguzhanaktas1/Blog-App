@@ -49,8 +49,7 @@ export const getPostById = async (
       },
     });
     if (!post) {
-      res.status(404).json({ error: "Post not found" });
-      return;
+      return next({ status: 404, message: "Post not found" });
     }
     res.json(post);
   } catch (error) {
@@ -67,8 +66,7 @@ export const createPost = async (
   // artık req.userId'yi tanıyor olacak TS
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
-    res.status(400).json({ errors: errors.array() });
-    return;
+    return next({ status: 400, message: "Validation error", errors: errors.array() });
   }
   try {
     const { title, content } = req.body;
@@ -101,8 +99,7 @@ export const updatePost = async (
     console.log("userId:", req.userId, "role:", req.userRole);
 
     if (!post || (!isOwner && !isAdmin)) {
-      res.status(403).json({ error: "Yetkisiz işlem" });
-      return;
+      return next({ status: 403, message: "Yetkisiz işlem" });
     }
 
     // Eğer yeni bir fotoğraf yüklenmişse (req.file varsa), eski fotoğrafı sil ve yenisini ekle
@@ -145,8 +142,7 @@ export const deletePost = async (
     const isOwner = post?.authorId === req.userId;
     const isAdmin = req.userRole === "admin";
     if (!post || (!isOwner && !isAdmin)) {
-      res.status(403).json({ error: "Yetkisiz işlem" });
-      return;
+      return next({ status: 403, message: "Yetkisiz işlem" });
     }
 
     // Önce ilgili fotoğrafları sil (hem DB'den hem dosya sisteminden)
@@ -176,7 +172,7 @@ export const likePost = async (req: AuthRequest, res: Response, next: NextFuncti
   try {
     const postId = Number(req.params.id);
     const userId = req.userId;
-    if (!userId) { res.status(401).json({ error: "Giriş yapmalısınız" }); return; }
+    if (!userId) { return next({ status: 401, message: "Giriş yapmalısınız" }); }
     // Zaten like'ladıysa hata verme
     const existing = await prisma.like.findUnique({ where: { userId_postId: { userId, postId } } });
     if (existing) { res.status(200).json({ liked: true }); return; }
@@ -192,7 +188,7 @@ export const unlikePost = async (req: AuthRequest, res: Response, next: NextFunc
   try {
     const postId = Number(req.params.id);
     const userId = req.userId;
-    if (!userId) { res.status(401).json({ error: "Giriş yapmalısınız" }); return; }
+    if (!userId) { return next({ status: 401, message: "Giriş yapmalısınız" }); }
     await prisma.like.deleteMany({ where: { userId, postId } });
     res.status(200).json({ liked: false });
     return;
@@ -217,7 +213,7 @@ export const isPostLiked = async (req: AuthRequest, res: Response, next: NextFun
 export const getLikedPosts = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
     const userId = req.userId;
-    if (!userId) { res.status(401).json({ error: "Giriş yapmalısınız" }); return; }
+    if (!userId) { return next({ status: 401, message: "Giriş yapmalısınız" }); }
     const likes = await prisma.like.findMany({
       where: { userId },
       include: {
@@ -237,12 +233,11 @@ export const getLikedPosts = async (req: AuthRequest, res: Response, next: NextF
   }
 };
 
-export const uploadPostImage = async (req: any, res: Response): Promise<void> => {
+export const uploadPostImage = async (req: any, res: Response, next: NextFunction): Promise<void> => {
   const postId = Number(req.params.id);
   const files = req.files as Express.Multer.File[];
   if (!files || files.length === 0) {
-    res.status(400).json({ error: "No files uploaded" });
-    return;
+    return next({ status: 400, message: "No files uploaded" });
   }
   try {
     const urls: string[] = [];
@@ -260,18 +255,16 @@ export const uploadPostImage = async (req: any, res: Response): Promise<void> =>
     res.status(201).json({ urls });
     return;
   } catch (err) {
-    res.status(500).json({ error: "Image upload failed" });
-    return;
+    next(err);
   }
 };
 
-export const deletePostImage = async (req: AuthRequest, res: Response): Promise<void> => {
+export const deletePostImage = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
     const imageId = Number(req.params.id);
     const image = await prisma.image.findUnique({ where: { id: imageId } });
     if (!image) {
-      res.status(404).json({ error: "Image not found" });
-      return;
+      return next({ status: 404, message: "Image not found" });
     }
     // Dosyayı sil
     try {
@@ -284,6 +277,6 @@ export const deletePostImage = async (req: AuthRequest, res: Response): Promise<
     await prisma.image.delete({ where: { id: imageId } });
     res.status(204).send();
   } catch (err) {
-    res.status(500).json({ error: "Image delete failed" });
+    next(err);
   }
 };

@@ -18,8 +18,7 @@ export const authenticateToken = (req: AuthRequest, res: Response, next: NextFun
   const token = authHeader && authHeader.split(" ")[1];
 
   if (!token) {
-    res.status(401).json({ error: "Access denied" });
-    return;
+    return next({ status: 401, message: "Access denied" });
   }
 
   try {
@@ -28,8 +27,7 @@ export const authenticateToken = (req: AuthRequest, res: Response, next: NextFun
     req.userRole = decoded.role;
     next();
   } catch (err) {
-    res.status(403).json({ error: "Invalid token" });
-    return;
+    return next({ status: 403, message: "Invalid token" });
   }
 };
 
@@ -38,22 +36,19 @@ export const authorizeRole = (role: string) => {
     const authHeader = req.headers.authorization;
     const token = authHeader && authHeader.split(" ")[1];
     if (!token) {
-      res.status(401).json({ error: "No token" });
-      return;
+      return next({ status: 401, message: "No token" });
     }
 
     try {
       const decoded: any = jwt.verify(token, JWT_SECRET);
       if (decoded.role !== role) {
-        res.status(403).json({ error: "Yetkisiz erişim" });
-        return;
+        return next({ status: 403, message: "Yetkisiz erişim" });
       }
 
       req.userId = decoded.userId;
       next();
     } catch {
-      res.status(403).json({ error: "Geçersiz token" });
-      return;
+      return next({ status: 403, message: "Geçersiz token" });
     }
   };
 };
@@ -62,7 +57,7 @@ export const authMiddleware = (req: AuthRequest, res: Response, next: NextFuncti
   const authHeader = req.headers.authorization;
   
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    return res.status(401).json({ error: "Token bulunamadı" });
+    return next({ status: 401, message: "Token bulunamadı" });
   }
 
   const token = authHeader.split(" ")[1];
@@ -77,6 +72,6 @@ export const authMiddleware = (req: AuthRequest, res: Response, next: NextFuncti
     req.userRole = decoded.role;
     next();
   } catch (error) {
-    res.status(401).json({ error: "Geçersiz token" });
+    return next({ status: 401, message: "Geçersiz token" });
   }
 };

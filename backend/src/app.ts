@@ -8,6 +8,8 @@ import commentRoutes from "./routes/comment";
 import profileRoutes from "./routes/profile";
 import aiRoutes from "./routes/ai";
 import bodyParser from "body-parser";
+import { errorHandler } from "./middlewares/errorHandler";
+import type { ErrorRequestHandler } from "express";
 const app = express()
 
 app.get("/test-log", (req, res) => {
@@ -27,4 +29,7 @@ app.use("/admin", adminRoutes);
 app.use("/uploads", express.static("uploads"));
 
 app.use("/api/ai", aiRoutes);
+
+app.use(errorHandler as ErrorRequestHandler);
+
 export default app
