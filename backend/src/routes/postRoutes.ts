@@ -12,7 +12,7 @@ import {
   uploadPostImage,
   deletePostImage,
 } from "../controllers/postController";
-import { validatePost } from "../middlewares/postValidation";
+import { validatePost } from "../middlewares/validatePost";
 import { authenticateToken } from "../middlewares/authMiddleware";
 import multer from "multer";
 

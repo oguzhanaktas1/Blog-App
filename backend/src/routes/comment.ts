@@ -1,7 +1,7 @@
 import express from "express";
 import { getCommentsByPost, addComment, deleteComment } from "../controllers/commentController";
 import { authenticateToken } from "../middlewares/authMiddleware";
-import { validateComment } from "../middlewares/commentValidation";
+import { validateComment } from "../middlewares/validateComment";
 import type { AuthRequest } from "../middlewares/authMiddleware";
 import { Response, NextFunction } from "express";
 
