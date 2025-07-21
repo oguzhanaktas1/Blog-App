@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import React from "react";
+import React, { useMemo } from "react";
 import {
   Box,
   Heading,
@@ -33,7 +33,7 @@ interface UserProfile {
   role: string;
 }
 
-const Profile: React.FC = () => {
+const Profile: React.FC = React.memo(() => {
   const [likedPosts, setLikedPosts] = React.useState<Post[]>([]);
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
@@ -123,6 +123,10 @@ const Profile: React.FC = () => {
     }
   };
 
+  const sortedLikedPosts = useMemo(() => {
+    return likedPosts.slice().sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  }, [likedPosts]);
+
   return (
     <Box minH="100vh" minW="100vw" bg={bg}>
       <Container maxW="container.xl" px={{ base: 4, md: "20%" }} py={10}>
@@ -200,13 +204,13 @@ const Profile: React.FC = () => {
                 <AlertIcon />
                 {error}
               </Alert>
-            ) : likedPosts.length === 0 ? (
+            ) : sortedLikedPosts.length === 0 ? (
               <Text color="gray.500" fontSize="lg" textAlign="center">
                 Henüz hiç post beğenmediniz.
               </Text>
             ) : (
               <VStack spacing={8} align="stretch" py={2}>
-                {likedPosts.map((post) => (
+                {sortedLikedPosts.map((post) => (
                   <PostContentBox
                     key={post.id}
                     post={post}
@@ -220,6 +224,6 @@ const Profile: React.FC = () => {
       </Container>
     </Box>
   );
-};
+});
 
 export default Profile;
