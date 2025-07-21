@@ -1,12 +1,11 @@
 import express from "express";
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "../prisma/client";
 import {
   authenticateToken,
   authorizeRole,
 } from "../middlewares/authMiddleware";
 
 const router = express.Router();
-const prisma = new PrismaClient();
 
 // ✅ GET /admin/users - Tüm kullanıcıları getir
 router.get(

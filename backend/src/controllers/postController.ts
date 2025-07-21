@@ -1,11 +1,8 @@
 import { Request, Response, NextFunction } from "express";
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "../prisma/client";
 import { validationResult } from "express-validator";
 import { AuthRequest } from "../middlewares/authMiddleware";
-import path from "path";
 import fs from "fs";
-
-const prisma = new PrismaClient();
 
 export const getAllPosts = async (
   req: Request,

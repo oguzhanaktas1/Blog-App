@@ -1,9 +1,8 @@
 import { Request, Response, NextFunction } from "express";
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "../prisma/client";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 
-const prisma = new PrismaClient();
 const JWT_SECRET = process.env.JWT_SECRET || "dev_secret"; // burayı iyileştir
 
 export const signup = async (req: Request, res: Response, next: NextFunction) => {

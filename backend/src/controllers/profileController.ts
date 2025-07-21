@@ -1,6 +1,5 @@
 import { Request, Response } from "express";
 import { prisma } from "../prisma/client"; // kendi prisma client yolunu kullan
-import path from "path";
 
 export const uploadProfilePhoto = async (
   req: Request,
