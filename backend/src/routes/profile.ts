@@ -5,7 +5,7 @@ import multer from "multer";
 import { getProfile } from "../controllers/profileController";
 
 const router = express.Router();
-const upload = multer({ dest: "uploads/" }); // veya kendi storage ayarınız
+const upload = multer({ dest: "uploads/" });
 
 router.post(
   "/upload-profile-photo",

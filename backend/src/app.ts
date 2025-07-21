@@ -6,7 +6,8 @@ import authRoutes from "./routes/authRoutes"
 import adminRoutes from "./routes/admin";
 import commentRoutes from "./routes/comment";
 import profileRoutes from "./routes/profile";
-
+import aiRoutes from "./routes/ai";
+import bodyParser from "body-parser";
 const app = express()
 
 app.get("/test-log", (req, res) => {
@@ -16,7 +17,7 @@ app.get("/test-log", (req, res) => {
 
 app.use(cors())
 app.use(express.json())
-
+app.use(bodyParser.json());
 app.use("/auth", authRoutes);
 app.use("/posts", postRoutes)
 app.use("/api", commentRoutes);
@@ -25,4 +26,5 @@ app.use("/api", profileRoutes);
 app.use("/admin", adminRoutes);
 app.use("/uploads", express.static("uploads"));
 
+app.use("/api/ai", aiRoutes);
 export default app

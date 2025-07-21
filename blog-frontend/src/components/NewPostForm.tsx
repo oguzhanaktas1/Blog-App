@@ -8,6 +8,7 @@ import {
   VStack,
   Heading,
   useToast,
+  Flex,
 } from "@chakra-ui/react";
 import { useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
@@ -24,59 +25,97 @@ const NewPostForm = ({ onSuccess, onClose }: NewPostFormProps) => {
   const [content, setContent] = useState("");
   const [selectedImages, setSelectedImages] = useState<File[]>([]);
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
+  const [showAIPrompt, setShowAIPrompt] = useState(false);
+  const [aiPrompt, setAIPrompt] = useState("");
+  const [isGenerating, setIsGenerating] = useState(false);
   const toast = useToast();
   const navigate = useNavigate();
 
-  const handleSubmit = useCallback(async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      const token = localStorage.getItem("token");
-      // 1. Postu oluştur
-      const res = await axios.post<Post>(
-        "/posts",
-        { title, content },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      const postId = res.data.id;
-      // 2. Fotoğraflar seçildiyse yükle
-      if (selectedImages.length > 0) {
-        const formData = new FormData();
-        selectedImages.forEach((file) => formData.append("images", file));
-        await axios.post(
-          `/posts/${postId}/upload-image`,
-          formData,
-          {
+  const handleSubmit = useCallback(
+    async (e: React.FormEvent) => {
+      e.preventDefault();
+      try {
+        const token = localStorage.getItem("token");
+        const res = await axios.post<Post>(
+          "/posts",
+          { title, content },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        const postId = res.data.id;
+
+        if (selectedImages.length > 0) {
+          const formData = new FormData();
+          selectedImages.forEach((file) => formData.append("images", file));
+          await axios.post(`/posts/${postId}/upload-image`, formData, {
             headers: {
               "Content-Type": "multipart/form-data",
               Authorization: `Bearer ${token}`,
             },
-          }
-        );
+          });
+        }
+
+        toast({
+          title: "Post created.",
+          description: "Your post was successfully created.",
+          status: "success",
+          duration: 3000,
+          isClosable: true,
+        });
+
+        setTitle("");
+        setContent("");
+        setSelectedImages([]);
+        setImagePreviews([]);
+        if (onSuccess) onSuccess();
+        if (onClose) onClose();
+        navigate("/");
+      } catch {
+        toast({
+          title: "Error",
+          description: "Failed to create post.",
+          status: "error",
+          duration: 3000,
+          isClosable: true,
+        });
       }
+    },
+    [title, content, selectedImages, onSuccess, onClose, navigate, toast]
+  );
+
+  const handleAIGenerate = async () => {
+    setIsGenerating(true);
+    try {
+      const token = localStorage.getItem("token");
+      const res = await axios.post<{ content: string }>(
+        "/api/ai/generate",
+        { prompt: aiPrompt },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      setContent(res.data.content);
       toast({
-        title: "Post created.",
-        description: "Your post was successfully created.",
+        title: "AI content generated.",
         status: "success",
         duration: 3000,
         isClosable: true,
       });
-      setTitle("");
-      setContent("");
-      setSelectedImages([]);
-      setImagePreviews([]);
-      if (onSuccess) onSuccess();
-      if (onClose) onClose();
-      navigate("/");
+      setShowAIPrompt(false);
+      setAIPrompt("");
     } catch {
       toast({
-        title: "Error",
-        description: "Failed to create post.",
+        title: "AI Error",
+        description: "Failed to generate content.",
         status: "error",
         duration: 3000,
         isClosable: true,
       });
+    } finally {
+      setIsGenerating(false);
     }
-  }, [title, content, selectedImages, onSuccess, onClose, navigate, toast]);
+  };
 
   return (
     <Box maxW="2xl" mx="auto" py={10}>
@@ -98,9 +137,40 @@ const NewPostForm = ({ onSuccess, onClose }: NewPostFormProps) => {
               placeholder="Write your post content..."
               rows={6}
               value={content}
+              className="whitespace-pre-wrap w-full p-4 border rounded"
               onChange={(e) => setContent(e.target.value)}
             />
           </FormControl>
+
+          {/* AI ile içerik oluşturma butonu ve input alanı */}
+          {!showAIPrompt ? (
+            <Button
+              onClick={() => setShowAIPrompt(true)}
+              colorScheme="purple"
+              variant="outline"
+              width="full"
+            >
+              Create your content with AI
+            </Button>
+          ) : (
+            <Flex w="full" gap={2} direction="column">
+              <Input
+                placeholder="Enter a prompt for AI to generate content..."
+                value={aiPrompt}
+                onChange={(e) => setAIPrompt(e.target.value)}
+              />
+              <Button
+                onClick={handleAIGenerate}
+                colorScheme="purple"
+                isDisabled={!aiPrompt.trim() || isGenerating}
+                isLoading={isGenerating}
+                loadingText="Generating content..."
+              >
+                Generate
+              </Button>
+            </Flex>
+          )}
+
           {/* Fotoğraf yükleme alanı */}
           <Input
             type="file"

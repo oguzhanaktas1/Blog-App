@@ -25,8 +25,7 @@ import {
 import type { ReactNode } from "react";
 import { FiMoreVertical } from "react-icons/fi";
 import UpdatePostForm from "./UpdatePostForm";
-import React, { useCallback, useMemo } from "react";
-import { Link } from "react-router-dom";
+import React, { useCallback, useMemo, useState } from "react";
 import { AiFillHeart, AiOutlineHeart } from "react-icons/ai";
 import { likePost, unlikePost, isPostLiked } from "../services/post";
 
@@ -57,8 +56,6 @@ interface PostContentBoxProps {
   children?: ReactNode;
   showBadge?: boolean;
   headingSize?: string;
-  contentLines?: number;
-  showReadMore?: boolean; // new prop
 }
 
 const PostContentBox = React.memo(({
@@ -70,8 +67,6 @@ const PostContentBox = React.memo(({
   children,
   showBadge = true,
   headingSize = "xl",
-  contentLines = 4,
-  showReadMore = false,
 }: PostContentBoxProps) => {
   const bg = useColorModeValue("white", "gray.800");
   const boxShadow = useColorModeValue("md", "dark-lg");
@@ -84,6 +79,7 @@ const PostContentBox = React.memo(({
     React.useState<PostContentBoxPost | null>(null);
   const [liked, setLiked] = React.useState<boolean>(false);
   const [likeLoading, setLikeLoading] = React.useState<boolean>(false);
+  const [showAllContent, setShowAllContent] = useState(false);
 
   React.useEffect(() => {
     let mounted = true;
@@ -197,6 +193,11 @@ const PostContentBox = React.memo(({
   }, [post.author?.profilePhoto]);
   const images = useMemo(() => post.images || [], [post.images]);
 
+  // Determine if content is longer than 4 lines
+  const contentLines = useMemo(() => post.content.split("\n"), [post.content]);
+  const isLongContent = contentLines.length > 4;
+  const displayedContent = showAllContent ? post.content : contentLines.slice(0, 4).join("\n");
+
   return (
     <Box
       p={{ base: 4, md: 8 }}
@@ -207,15 +208,29 @@ const PostContentBox = React.memo(({
       w="100%"
     >
       <Flex justify="space-between" align="center" mb={3}>
-        <Heading
-          fontSize={{ base: headingSize, md: headingSize }}
-          noOfLines={1}
-          flex="1"
-          mr={4}
-          wordBreak="break-word"
-        >
-          {post.title}
-        </Heading>
+        <Flex align="center" mb={2}>
+          {authorAvatar ? (
+            <Avatar
+              src={authorAvatar}
+              name={authorName}
+              size="sm"
+              mr={2}
+              display="inline-block"
+              verticalAlign="middle"
+            />
+          ) : (
+            <Avatar
+              name={authorName}
+              size="sm"
+              mr={2}
+              display="inline-block"
+              verticalAlign="middle"
+            />
+          )}
+          <Text fontSize="sm" color="gray.500">
+            {authorName} - {new Date(post.createdAt).toLocaleDateString()}
+          </Text>
+        </Flex>
         <Flex align="center" gap={2}>
           {showBadge && isNew && (
             <Badge
@@ -231,29 +246,19 @@ const PostContentBox = React.memo(({
           {renderPostMenu()}
         </Flex>
       </Flex>
-
-      <Text fontSize="sm" color="gray.500" mb={2}>
-        {/* Yazar Avatarı */}
-        {authorAvatar ? (
-          <Avatar
-            src={authorAvatar}
-            name={authorName}
-            size="sm"
-            mr={2}
-            display="inline-block"
-            verticalAlign="middle"
-          />
-        ) : (
-          <Avatar
-            name={authorName}
-            size="sm"
-            mr={2}
-            display="inline-block"
-            verticalAlign="middle"
-          />
-        )}
-        {authorName} - {new Date(post.createdAt).toLocaleDateString()}
-      </Text>
+      {/* Post title, only render if present */}
+      {post.title && (
+        <Heading
+          fontSize={{ base: headingSize, md: headingSize }}
+          noOfLines={1}
+          flex="1"
+          mr={4}
+          wordBreak="break-word"
+          mb={4}
+        >
+          {post.title}
+        </Heading>
+      )}
 
       {images.length > 0 && (
         <Flex mb={4} gap={2} wrap="wrap">
@@ -272,24 +277,24 @@ const PostContentBox = React.memo(({
         </Flex>
       )}
 
-      <Text
-        noOfLines={contentLines}
+      <Box
+        whiteSpace="pre-line"
         color={useColorModeValue("gray.700", "gray.300")}
         mb={4}
+        fontSize="md"
       >
-        {post.content}
-      </Text>
-      {/* Devamını Oku butonu sadece showReadMore true ise ve içerik uzun ise göster */}
-      {showReadMore && post.content.length > 300 && (
+        {displayedContent}
+      </Box>
+      {/* Devamını Oku butonu sadece içerik 4 satırdan uzunsa ve henüz tamamı gösterilmiyorsa */}
+      {isLongContent && !showAllContent && (
         <Button
-          as={Link}
-          to={`/posts/${post.id}`}
           mt="auto"
           size="sm"
           colorScheme="teal"
           variant="outline"
           aria-label={`Devamını oku: ${post.title}`}
           fontWeight="semibold"
+          onClick={() => setShowAllContent(true)}
         >
           Devamını Oku
         </Button>
