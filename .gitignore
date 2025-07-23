@@ -21,7 +21,6 @@ build/
 # Environment files
 .env
 .env.*
-!.env.example
 
 # Misc
-*.local
+*.local 

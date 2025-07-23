@@ -7,11 +7,6 @@ const admins = [
     email: "aktasoguzhan80@gmail.com",
     password: "admin123",
   },
-  {
-    name: "Second Admin",
-    email: "oguzhan.emre4@gmail.com",
-    password: "admin456",
-  },
 ];
 
 async function main() {
