@@ -17,6 +17,7 @@ import { getUserInfo } from "../utils/getUserInfo";
 import { FaUserCircle } from "react-icons/fa";
 import React, { useCallback } from "react";
 import axios from "axios";
+import socket from "../utils/socket";
 
 interface UserProfile {
   id: number;
@@ -70,12 +71,17 @@ const Navbar = React.memo(function Navbar({ isLoggedIn, setIsLoggedIn }: NavbarP
 
   const handleLogout = useCallback(() => {
     localStorage.removeItem("token");
+    localStorage.removeItem("user");
+  
+    socket.disconnect(); // 💥 Socket bağlantısını kapat
+    socket.connect();    // 🔁 Gerekirse yeniden bağlan ama register edilmeyecek
+  
     setIsLoggedIn(false);
     setProfilePhotoUrl(null);
     setUserProfile(null);
     navigate("/");
   }, [setIsLoggedIn, setProfilePhotoUrl, setUserProfile, navigate]);
-
+  
   return (
     <Flex
       as="nav"

@@ -3,6 +3,7 @@ import { prisma } from "../prisma/client";
 import { validationResult } from "express-validator";
 import { AuthRequest } from "../middlewares/authMiddleware";
 import fs from "fs";
+import { notifyUser } from "../utils/notifyUser";
 
 export const getAllPosts = async (
   req: Request,
@@ -167,18 +168,67 @@ export const deletePost = async (
   }
 };
 
-export const likePost = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+export const likePost = async (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
   console.log("likePost userId:", req.userId, "role:", req.userRole);
+
   try {
     const postId = Number(req.params.id);
     const userId = req.userId;
-    if (!userId) { return next({ status: 401, message: "Giriş yapmalısınız" }); }
-    // Zaten like'ladıysa hata verme
-    const existing = await prisma.like.findUnique({ where: { userId_postId: { userId, postId } } });
-    if (existing) { res.status(200).json({ liked: true }); return; }
-    await prisma.like.create({ data: { userId, postId } });
+
+    if (!userId) {
+      return next({ status: 401, message: "Giriş yapmalısınız" });
+    }
+
+    // Kullanıcı daha önce like'ladıysa tekrar kaydetme
+    const existing = await prisma.like.findUnique({
+      where: {
+        userId_postId: {
+          userId,
+          postId,
+        },
+      },
+    });
+
+    if (existing) {
+      res.status(200).json({ liked: true });
+      return;
+    }
+
+    // Like kaydı oluştur
+    await prisma.like.create({
+      data: {
+        userId,
+        postId,
+      },
+    });
+
+    // Bildirim gönder (post sahibine)
+    const post = await prisma.post.findUnique({
+      where: { id: postId },
+      select: {
+        authorId: true,
+      },
+    });
+
+    // Kendi postunu like'lıyorsa bildirim gönderme
+    if (post && post.authorId !== userId) {
+      // İsteğe bağlı olarak kullanıcı adını almak için:
+      const liker = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { name: true },
+      });
+
+      const likerName = liker?.name || "Bir kullanıcı";
+
+      notifyUser(post.authorId.toString(), `${likerName} gönderinizi beğendi.`);
+
+    }
+
     res.status(201).json({ liked: true });
-    return;
   } catch (err) {
     next(err);
   }

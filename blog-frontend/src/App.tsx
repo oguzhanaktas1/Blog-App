@@ -12,18 +12,34 @@ import CreatePostPage from "./pages/CreatePostPage";
 import PostDetail from "./pages/PostDetail";
 import NotFoundPage from "./pages/404";
 import Profile from "./pages/Profile";
+import socket from "./utils/socket";
+import NotificationListener from "./components/NotificationListener";
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   useEffect(() => {
-    setIsLoggedIn(!!localStorage.getItem("token"));
+    const token = localStorage.getItem("token");
+    const userData = localStorage.getItem("user");
+  
+    if (token && userData) {
+      const user = JSON.parse(userData);
+      socket.emit("register", user.id);
+      setIsLoggedIn(true);
+    } else {
+      setIsLoggedIn(false);
+    }
   }, []);
+  
 
   return (
     <ChakraProvider>
       <Router>
         <Navbar isLoggedIn={isLoggedIn} setIsLoggedIn={setIsLoggedIn} />
+
+        {/* Bildirim listener */}
+        <NotificationListener />
+
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/signup" element={<SignupPage />} />
