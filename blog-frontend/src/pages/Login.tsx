@@ -18,6 +18,7 @@ import {
 import { login } from "../services/auth";
 import { useNavigate, Link as RouterLink } from "react-router-dom";
 import { ViewIcon, ViewOffIcon } from "@chakra-ui/icons";
+import socket from "../utils/socket";
 
 export default function LoginPage({
   setIsLoggedIn,
@@ -39,6 +40,8 @@ export default function LoginPage({
     try {
       const res = await login(form);
       localStorage.setItem("token", res.token);
+      localStorage.setItem("user", JSON.stringify(res.user));
+
       setIsLoggedIn(true);
       toast({
         title: "Giriş Başarılı",
@@ -48,6 +51,8 @@ export default function LoginPage({
         isClosable: true,
       });
       navigate("/");
+      socket.connect();
+      socket.emit("register", res.user.id);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       const errorMessage =

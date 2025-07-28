@@ -143,6 +143,9 @@ const Navbar = React.memo(function Navbar({ isLoggedIn, setIsLoggedIn }: NavbarP
       <Box>
         {!isLoggedIn ? (
           <>
+            <Button onClick={handleLogout}>
+              logout
+            </Button>
             <Button
               as={Link}
               to="/signup"

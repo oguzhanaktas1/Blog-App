@@ -16,7 +16,9 @@ import socket from "./utils/socket";
 import NotificationListener from "./components/NotificationListener";
 
 function App() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(() => {
+    return !!localStorage.getItem("token");
+  });
 
   useEffect(() => {
     const token = localStorage.getItem("token");
