@@ -6,6 +6,7 @@ import jwt from "jsonwebtoken";
 const JWT_SECRET = process.env.JWT_SECRET || "dev_secret"; // burayı iyileştir
 
 export const signup = async (req: Request, res: Response, next: NextFunction) => {
+  console.log("Gelen body:", req.body); // <-- bunu ekle
   const { name, email, password } = req.body;
   try {
     const existingUser = await prisma.user.findUnique({ where: { email } });

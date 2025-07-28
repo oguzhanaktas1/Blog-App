@@ -23,7 +23,7 @@ import { ViewIcon, ViewOffIcon } from "@chakra-ui/icons";
 export default function SignupPage() {
   const [form, setForm] = useState({ name: "", email: "", password: "" });
   const [isLoading, setIsLoading] = useState(false);
-  const [showPassword, setShowPassword] = useState(false); // Şifre gösterme durumu
+  const [showPassword, setShowPassword] = useState(false);
   const [emailTouched, setEmailTouched] = useState(false);
   const emailValid = /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(form.email);
   const navigate = useNavigate();
@@ -38,6 +38,19 @@ export default function SignupPage() {
       setEmailTouched(true);
       return;
     }
+  
+    if (form.password.length < 6) {
+      toast({
+        title: "Geçersiz Şifre",
+        description: "Şifreniz en az 6 karakter olmalıdır.",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+  
+    console.log("GÖNDERİLEN FORM:", form);
     setIsLoading(true);
     try {
       const res = await signup(form);
@@ -52,9 +65,14 @@ export default function SignupPage() {
       navigate("/login");
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
+      const errorMessage =
+        err.response?.data?.message === "Email already exists"
+          ? "Bu e-posta adresiyle zaten bir hesap var."
+          : err.response?.data?.message || "Kayıt olma işlemi başarısız.";
+  
       toast({
         title: "Kayıt Başarısız",
-        description: err.response?.data?.message || "Kayıt olma işlemi başarısız.",
+        description: errorMessage,
         status: "error",
         duration: 3000,
         isClosable: true,
@@ -63,6 +81,7 @@ export default function SignupPage() {
       setIsLoading(false);
     }
   };
+  
 
   const toggleShowPassword = () => setShowPassword((show) => !show);
 

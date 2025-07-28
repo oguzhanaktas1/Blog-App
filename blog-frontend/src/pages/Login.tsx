@@ -19,7 +19,11 @@ import { login } from "../services/auth";
 import { useNavigate, Link as RouterLink } from "react-router-dom";
 import { ViewIcon, ViewOffIcon } from "@chakra-ui/icons";
 
-export default function LoginPage({ setIsLoggedIn }: { setIsLoggedIn: (val: boolean) => void }) {
+export default function LoginPage({
+  setIsLoggedIn,
+}: {
+  setIsLoggedIn: (val: boolean) => void;
+}) {
   const [form, setForm] = useState({ email: "", password: "" });
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
@@ -44,11 +48,16 @@ export default function LoginPage({ setIsLoggedIn }: { setIsLoggedIn: (val: bool
         isClosable: true,
       });
       navigate("/");
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
+      const errorMessage =
+        err.response?.data?.message === "Email already exists"
+          ? "Bu e-posta adresiyle zaten bir hesap var."
+          : err.response?.data?.message || "E-posta veya şifre hatalı.";
+
       toast({
         title: "Giriş Başarısız",
-        description: err.response?.data?.message || "E-posta veya şifre hatalı.",
+        description: errorMessage,
         status: "error",
         duration: 3000,
         isClosable: true,
@@ -85,7 +94,11 @@ export default function LoginPage({ setIsLoggedIn }: { setIsLoggedIn: (val: bool
         justifyContent="center"
       >
         <Box maxW={{ base: "xs", sm: "md", md: "lg", xl: "2xl" }} w="100%">
-          <Heading mb={6} fontSize={{ base: "2xl", md: "3xl" }} color="gray.800">
+          <Heading
+            mb={6}
+            fontSize={{ base: "2xl", md: "3xl" }}
+            color="gray.800"
+          >
             Giriş Yap
           </Heading>
           <Text mb={4} color="gray.600">
@@ -108,7 +121,10 @@ export default function LoginPage({ setIsLoggedIn }: { setIsLoggedIn: (val: bool
                   onChange={handleChange}
                   size="lg"
                   variant="filled"
-                  _focus={{ borderColor: "teal.500", boxShadow: "0 0 0 1px teal.500" }}
+                  _focus={{
+                    borderColor: "teal.500",
+                    boxShadow: "0 0 0 1px teal.500",
+                  }}
                   autoComplete="username"
                 />
               </FormControl>
@@ -121,12 +137,17 @@ export default function LoginPage({ setIsLoggedIn }: { setIsLoggedIn: (val: bool
                     type={showPassword ? "text" : "password"}
                     value={form.password}
                     onChange={handleChange}
-                    _focus={{ borderColor: "teal.500", boxShadow: "0 0 0 1px teal.500" }}
+                    _focus={{
+                      borderColor: "teal.500",
+                      boxShadow: "0 0 0 1px teal.500",
+                    }}
                     autoComplete="current-password"
                   />
                   <InputRightElement>
                     <IconButton
-                      aria-label={showPassword ? "Şifreyi gizle" : "Şifreyi göster"}
+                      aria-label={
+                        showPassword ? "Şifreyi gizle" : "Şifreyi göster"
+                      }
                       icon={showPassword ? <ViewIcon /> : <ViewOffIcon />}
                       onClick={toggleShowPassword}
                       variant="ghost"
@@ -152,12 +173,22 @@ export default function LoginPage({ setIsLoggedIn }: { setIsLoggedIn: (val: bool
           </form>
           <Text mt={6} color="gray.600" fontSize="sm">
             Hesabınız yok mu?{" "}
-            <ChakraLink as={RouterLink} to="/signup" color="teal.500" fontWeight="bold">
+            <ChakraLink
+              as={RouterLink}
+              to="/signup"
+              color="teal.500"
+              fontWeight="bold"
+            >
               Kayıt Olun
             </ChakraLink>
           </Text>
           <Text mt={2} color="gray.600" fontSize="sm">
-            <ChakraLink as={RouterLink} to="/forgot-password" color="teal.500" fontWeight="bold">
+            <ChakraLink
+              as={RouterLink}
+              to="/forgot-password"
+              color="teal.500"
+              fontWeight="bold"
+            >
               Şifremi Unuttum
             </ChakraLink>
           </Text>
