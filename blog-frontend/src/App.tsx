@@ -3,7 +3,6 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Home from "./pages/Home";
 import SignupPage from "./pages/Signup";
 import LoginPage from "./pages/Login";
-import Dashboard from "./pages/Dashboard";
 import AdminDashboard from "./pages/AdminDashboard";
 import Navbar from "./components/Navbar";
 import { useEffect, useState } from "react";
@@ -27,7 +26,6 @@ function App() {
         <Navbar isLoggedIn={isLoggedIn} setIsLoggedIn={setIsLoggedIn} />
         <Routes>
           <Route path="/" element={<Home />} />
-          <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/signup" element={<SignupPage />} />
           <Route path="/login" element={<LoginPage setIsLoggedIn={setIsLoggedIn} />} />
           <Route path="/admin" element={<AdminDashboard />} />

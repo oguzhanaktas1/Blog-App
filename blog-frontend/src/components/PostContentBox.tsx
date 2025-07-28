@@ -28,6 +28,7 @@ import UpdatePostForm from "./UpdatePostForm";
 import React, { useCallback, useMemo, useState } from "react";
 import { AiFillHeart, AiOutlineHeart } from "react-icons/ai";
 import { likePost, unlikePost, isPostLiked } from "../services/post";
+import { useNavigate } from "react-router-dom";
 
 interface Author {
   name?: string | null;
@@ -79,7 +80,8 @@ const PostContentBox = React.memo(({
     React.useState<PostContentBoxPost | null>(null);
   const [liked, setLiked] = React.useState<boolean>(false);
   const [likeLoading, setLikeLoading] = React.useState<boolean>(false);
-  const [showAllContent, setShowAllContent] = useState(false);
+  const [showAllContent] = useState(false);
+  const navigate = useNavigate();
 
   React.useEffect(() => {
     let mounted = true;
@@ -294,7 +296,7 @@ const PostContentBox = React.memo(({
           variant="outline"
           aria-label={`Devamını oku: ${post.title}`}
           fontWeight="semibold"
-          onClick={() => setShowAllContent(true)}
+          onClick={() => navigate(`/posts/${post.id}`)}
         >
           Devamını Oku
         </Button>

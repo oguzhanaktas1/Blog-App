@@ -1,27 +1,18 @@
-import React from 'react';
+/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { fetchCommentsThunk, addCommentThunk, deleteCommentThunk } from "../store/slices/commentsSlice";
+import { fetchCommentsThunk, addCommentThunk, deleteCommentThunk, addCommentFromSocket } from "../store/slices/commentsSlice";
 import type { RootState } from "../store";
 import { Box, Button, Textarea, VStack, HStack, Text, Spinner, IconButton, useToast, Alert, AlertIcon } from "@chakra-ui/react";
 import { DeleteIcon } from "@chakra-ui/icons";
 import { getUserEmail } from "../utils/getUserEmail";
 import { getUserRole } from "../utils/getUserRole";
+import socket from "../utils/socket"; // socket import
+import type { Comment } from "../types/Comment";
 
 interface PostCommentSectionProps {
   postId: number;
-}
-
-interface Comment {
-  id: number;
-  text: string;
-  createdAt: string;
-  author?: {
-    id: number;
-    name: string;
-    email: string;
-  } | null;
 }
 
 const PostCommentSection = React.memo(({ postId }: PostCommentSectionProps) => {
@@ -36,12 +27,25 @@ const PostCommentSection = React.memo(({ postId }: PostCommentSectionProps) => {
   const userRole = getUserRole();
   const isLoggedIn = !!userEmail;
 
+  // Yorumları yükle + socket dinleyicilerini ayarla
   useEffect(() => {
     dispatch(fetchCommentsThunk(postId) as any)
       .unwrap()
       .catch((error: any) => {
         console.log("Yorumlar alınamadı:", error);
       });
+
+    // Kullanıcı ilgili post sayfasına girince odaya katılır
+    socket.emit("join_post", postId);
+
+    // Canlı yorumları dinle
+    socket.on("receive_comment", (comment: Comment) => {
+      dispatch(addCommentFromSocket({ postId, comment }));
+    });
+
+    return () => {
+      socket.off("receive_comment");
+    };
   }, [dispatch, postId]);
 
   const handleAddComment = async () => {
@@ -49,14 +53,17 @@ const PostCommentSection = React.memo(({ postId }: PostCommentSectionProps) => {
     try {
       const result = await dispatch(addCommentThunk({ postId, text }) as any);
       if (addCommentThunk.fulfilled.match(result)) {
+        const addedComment = result.payload;
+
+        // Yorumu diğer kullanıcılara gönder
+        socket.emit("new_comment", { postId, comment: addedComment });
+
         setText("");
         toast({ title: "Yorum eklendi", status: "success", duration: 2000 });
       } else {
-        console.log("Yorum eklenemedi:", result);
         toast({ title: "Yorum eklenemedi", status: "error", duration: 2000 });
       }
     } catch (error) {
-      console.log("Yorum eklenirken hata:", error);
       toast({ title: "Yorum eklenemedi", status: "error", duration: 2000 });
     }
   };
@@ -67,11 +74,9 @@ const PostCommentSection = React.memo(({ postId }: PostCommentSectionProps) => {
       if (deleteCommentThunk.fulfilled.match(result)) {
         toast({ title: "Yorum silindi", status: "info", duration: 2000 });
       } else {
-        console.log("Yorum silinemedi:", result);
         toast({ title: "Yorum silinemedi", status: "error", duration: 2000 });
       }
     } catch (error) {
-      console.log("Yorum silinirken hata:", error);
       toast({ title: "Yorum silinemedi", status: "error", duration: 2000 });
     }
   };
@@ -104,7 +109,7 @@ const PostCommentSection = React.memo(({ postId }: PostCommentSectionProps) => {
         ) : comments.length === 0 ? (
           <Text>Henüz yorum yok.</Text>
         ) : (
-          (comments as Comment[]).slice().reverse().map((comment) => (
+          comments.slice().reverse().map((comment: Comment) => (
             <Box key={comment.id} p={3} bg="white" borderRadius="md" boxShadow="xs">
               <HStack justify="space-between">
                 <Box>

@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import { fetchComments, addComment, deleteComment } from "../../api/comments";
+import type { Comment } from "../../types/Comment";
 
 export const fetchCommentsThunk = createAsyncThunk(
   "comments/fetchComments",
@@ -31,7 +32,20 @@ const commentsSlice = createSlice({
     loading: false,
     error: null,
   } as any,
-  reducers: {},
+  reducers: {
+    addCommentFromSocket: (state, action) => {
+      const { postId, comment } = action.payload;
+      if (!state.items[postId]) {
+        state.items[postId] = [];
+      }
+    
+      // Aynı ID'de yorum varsa ekleme
+      const exists = state.items[postId].some((c: Comment) => c.id === comment.id);
+      if (!exists) {
+        state.items[postId].push(comment);
+      }
+    },    
+  },
   extraReducers: (builder) => {
     builder
       .addCase(fetchCommentsThunk.pending, (state) => {
@@ -63,5 +77,5 @@ const commentsSlice = createSlice({
       });
   },
 });
-
+export const { addCommentFromSocket } = commentsSlice.actions;
 export default commentsSlice.reducer; 
