@@ -9,6 +9,8 @@ import aiRoutes from "./routes/ai";
 import bodyParser from "body-parser";
 import { errorHandler } from "./middlewares/errorHandler";
 import type { ErrorRequestHandler } from "express";
+import postReactionsRoutes from "./routes/postReactionsRoutes";
+import commentReactionsRoutes from "./routes/commentReactionsRoutes";
 
 const app = express();
 
@@ -28,7 +30,8 @@ app.use("/api", profileRoutes);
 app.use("/admin", adminRoutes);
 app.use("/uploads", express.static("uploads"));
 app.use("/api/ai", aiRoutes);
-
+app.use("/api/post-reactions", postReactionsRoutes);
+app.use("/api/comment-reactions", commentReactionsRoutes);
 app.use(errorHandler as ErrorRequestHandler);
 
 export default app;

@@ -10,6 +10,8 @@ import { getUserEmail } from "../utils/getUserEmail";
 import { getUserRole } from "../utils/getUserRole";
 import socket from "../utils/socket"; // socket import
 import type { Comment } from "../types/Comment";
+import Reactions from "./Reactions";
+import { getUserInfo } from "../utils/getUserInfo";
 
 interface PostCommentSectionProps {
   postId: number;
@@ -26,7 +28,8 @@ const PostCommentSection = React.memo(({ postId }: PostCommentSectionProps) => {
   const userEmail = getUserEmail();
   const userRole = getUserRole();
   const isLoggedIn = !!userEmail;
-
+  const currentUser = getUserInfo();
+  
   // Yorumları yükle + socket dinleyicilerini ayarla
   useEffect(() => {
     dispatch(fetchCommentsThunk(postId) as any)
@@ -116,6 +119,7 @@ const PostCommentSection = React.memo(({ postId }: PostCommentSectionProps) => {
                   <Text fontWeight="medium">{comment.author?.name || "Anonim"}</Text>
                   <Text fontSize="sm" color="gray.500">{new Date(comment.createdAt).toLocaleString()}</Text>
                   <Text mt={2} style={{ wordBreak: 'break-word', overflowWrap: 'break-word', whiteSpace: 'pre-line' }}>{comment.text}</Text>
+                  <Reactions commentId={comment.id} userId={currentUser.userId!} />
                 </Box>
                 {(userRole === "admin" || userEmail === comment.author?.email) && (
                   <IconButton

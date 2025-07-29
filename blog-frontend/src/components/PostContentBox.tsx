@@ -29,6 +29,8 @@ import React, { useCallback, useMemo, useState } from "react";
 import { AiFillHeart, AiOutlineHeart } from "react-icons/ai";
 import { likePost, unlikePost, isPostLiked } from "../services/post";
 import { useNavigate } from "react-router-dom";
+import Reactions from "./Reactions";
+import { getUserInfo } from "../utils/getUserInfo"; // doğru path ile
 
 interface Author {
   name?: string | null;
@@ -88,6 +90,7 @@ const PostContentBox = React.memo(
     const [liked, setLiked] = React.useState<boolean>(false);
     const [likeLoading, setLikeLoading] = React.useState<boolean>(false);
     const [showAllContent] = useState(false);
+    const currentUser = getUserInfo();
     const navigate = useNavigate();
 
     React.useEffect(() => {
@@ -319,6 +322,8 @@ const PostContentBox = React.memo(
           onClick={handleLikeToggle}
         />
 
+        <Reactions postId={post.id} userId={currentUser.userId!} />
+
         {/* Devamını Oku butonu sadece içerik 4 satırdan uzunsa ve henüz tamamı gösterilmiyorsa */}
         {isLongContent && !showAllContent && (
           <Button
@@ -347,7 +352,7 @@ const PostContentBox = React.memo(
         )}
 
         {children}
-        
+
         {/* Update Modal */}
         <Modal isOpen={isOpen} onClose={onClose} size="xl" isCentered>
           <ModalOverlay />

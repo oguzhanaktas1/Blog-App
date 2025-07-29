@@ -25,6 +25,7 @@ model User {
   comments     Comment[]
   likes        Like[]
   images       Image[]   // Kullanıcının yüklediği resimler
+  reactions Reaction[]
 }
 
 model Post {
@@ -37,6 +38,7 @@ model Post {
   createdAt  DateTime  @default(now())
   likes      Like[]
   images     Image[]   // Gönderiye eklenen resimler
+  reactions Reaction[]
 }
 
 model Comment {
@@ -47,6 +49,7 @@ model Comment {
   post      Post     @relation(fields: [postId], references: [id])
   author    User     @relation(fields: [authorId], references: [id])
   createdAt DateTime @default(now())
+  reactions Reaction[]
 }
 
 model Like {
@@ -67,4 +70,22 @@ model Image {
   user      User?    @relation(fields: [userId], references: [id])
   post      Post?    @relation(fields: [postId], references: [id])
   uploadedAt DateTime @default(now())
+}
+
+model Reaction {
+  id        Int      @id @default(autoincrement())
+  type      String   // e.g. "like", "heart", "laugh", "angry"
+
+  user      User     @relation(fields: [userId], references: [id])
+  userId    Int
+  
+  post      Post?    @relation(fields: [postId], references: [id])
+  postId    Int?
+  
+  comment   Comment? @relation(fields: [commentId], references: [id])
+  commentId Int?
+  
+  createdAt DateTime @default(now())
+
+  @@unique([userId, postId, commentId, type]) // same user can't react twice to same post/comment with same type
 }

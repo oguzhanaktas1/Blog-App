@@ -1,6 +1,7 @@
 import { Server } from "socket.io";
 import { createServer } from "http";
 import app from "./app";
+import { prisma } from "./prisma/client";
 
 const httpServer = createServer(app);
 
@@ -63,7 +64,9 @@ io.on("connection", (socket) => {
       const viewerCount = io.sockets.adapter.rooms.get(postId)?.size || 0;
       io.to(postId).emit("viewer_count", viewerCount);
 
-      console.log(`Kullanıcı ${socket.id}, post-${postId} odasından ayrıldı (disconnect).`);
+      console.log(
+        `Kullanıcı ${socket.id}, post-${postId} odasından ayrıldı (disconnect).`
+      );
     }
 
     for (const [userId, socketSet] of connectedUsers.entries()) {
@@ -79,6 +82,71 @@ io.on("connection", (socket) => {
     }
 
     console.log("Kullanıcı ayrıldı:", socket.id);
+  });
+
+  socket.on("react-to-post", async ({ postId, userId, type }) => {
+    try {
+      const existing = await prisma.reaction.findFirst({
+        where: { postId, userId, type },
+      });
+
+      if (existing) {
+        // Toggle: remove reaction
+        await prisma.reaction.delete({ where: { id: existing.id } });
+      } else {
+        // Add reaction
+        await prisma.reaction.create({
+          data: {
+            postId,
+            userId,
+            type,
+          },
+        });
+      }
+
+      const reactions = await prisma.reaction.groupBy({
+        by: ["type"],
+        where: { postId },
+        _count: true,
+      });
+
+      io.emit("post-reaction-update", {
+        postId,
+        reactions,
+      });
+    } catch (error) {
+      console.error("Reaction error:", error);
+    }
+  });
+
+  socket.on("react-to-comment", async ({ commentId, userId, type }) => {
+    // Benzer yapı, sadece commentId ile
+    const existing = await prisma.reaction.findFirst({
+      where: { commentId, userId, type },
+    });
+
+    if (existing) {
+      await prisma.reaction.delete({ where: { id: existing.id } });
+    } else {
+      await prisma.reaction.create({
+        data: {
+          commentId,
+          userId,
+          type,
+        },
+      });
+    }
+
+    const reactions = await prisma.reaction.groupBy({
+      by: ["type"],
+      where: { commentId },
+      _count: true,
+    });
+
+    io.emit("comment-reaction-update", {
+      commentId,
+      reactions,
+    });
   });
 });
 
