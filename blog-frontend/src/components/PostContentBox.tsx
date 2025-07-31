@@ -178,8 +178,6 @@ const PostContentBox = React.memo(
     }, [post.author?.profilePhoto]);
     const images = useMemo(() => post.images || [], [post.images]);
 
-    // `contentLines` prop'u kaldırıldığı için `noOfLines` Chakra UI prop'unu kullanacağız.
-    // Metnin tamamının mı yoksa sadece 4 satırın mı gösterileceğini kontrol eder.
     const isLongContent = post.content.split("\n").length > 4;
     const displayedContent = displayFullContent
       ? post.content
@@ -194,7 +192,7 @@ const PostContentBox = React.memo(
         boxShadow={boxShadow}
         transition="all 0.2s"
         w="100%"
-        {...rest} // Buraya `...rest` prop'larını yayıyoruz
+        {...rest}
       >
         <Flex justify="space-between" align="center" mb={3}>
           <Flex align="center" mb={2}>

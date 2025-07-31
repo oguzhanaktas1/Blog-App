@@ -2,7 +2,6 @@ import {
   Flex,
   Box,
   Button,
-  Spacer,
   Avatar,
   Menu,
   MenuButton,
@@ -11,6 +10,8 @@ import {
   MenuDivider,
   Text,
   Badge,
+  HStack, // Yeni: Öğeleri yatayda düzenlemek için
+  Image, // Yeni: Logo için
 } from "@chakra-ui/react";
 import { Link, useNavigate } from "react-router-dom";
 import { getUserRole } from "../utils/getUserRole";
@@ -21,6 +22,8 @@ import axios from "axios";
 import socket from "../utils/socket";
 import { useSelector } from "react-redux";
 import type { RootState } from "../store/index";
+
+import AppLogo from "../assets/react.svg";
 
 interface UserProfile {
   id: number;
@@ -47,7 +50,7 @@ const Navbar = React.memo(function Navbar({
     (state: RootState) =>
       state.notifications.notifications.filter((n) => !n.isRead).length
   );
-  // Profil fotoğrafı ve kullanıcı bilgisi için state
+
   const [profilePhotoUrl, setProfilePhotoUrl] = React.useState<string | null>(
     null
   );
@@ -55,7 +58,6 @@ const Navbar = React.memo(function Navbar({
     null
   );
 
-  // Profil bilgisini backend'den çek
   React.useEffect(() => {
     if (!isLoggedIn) {
       setProfilePhotoUrl(null);
@@ -87,8 +89,8 @@ const Navbar = React.memo(function Navbar({
     localStorage.removeItem("token");
     localStorage.removeItem("user");
 
-    socket.disconnect(); // 💥 Socket bağlantısını kapat
-    socket.connect(); // 🔁 Gerekirse yeniden bağlan ama register edilmeyecek
+    socket.disconnect();
+    socket.connect();
 
     setIsLoggedIn(false);
     setProfilePhotoUrl(null);
@@ -103,41 +105,30 @@ const Navbar = React.memo(function Navbar({
       justify="space-between"
       wrap="wrap"
       w="100%"
-      px={8}
+      px={{ base: 4, md: 8 }}
       py={4}
       bgGradient="linear(to-r, teal.400, blue.500)"
       color="white"
       boxShadow="md"
       mb={8}
     >
-      <Box>
-        <Button
+      {/* Logo ve Uygulama Adı */}
+      <HStack spacing={2} align="center">
+        <Image src={AppLogo} alt="App Logo" boxSize="40px" /> {/* Logo */}
+        <Text
           as={Link}
           to="/"
-          variant="ghost"
-          color="white"
-          fontWeight="bold"
-          fontSize="xl"
-          _hover={{ bg: "teal.500", color: "white" }}
-          px={2}
+          fontSize={{ base: "xl", md: "2xl" }}
+          fontWeight="extrabold"
+          letterSpacing="wide"
+          _hover={{ textDecoration: "none", color: "whiteAlpha.800" }}
         >
-          Home
-        </Button>
+          My Awesome Blog
+        </Text>
+      </HStack>
 
-        {isLoggedIn && userRole === "admin" && (
-          <Button
-            as={Link}
-            to="/admin"
-            variant="ghost"
-            color="white"
-            fontWeight="bold"
-            px={2}
-            ml={4}
-            _hover={{ bg: "teal.500" }}
-          >
-            Admin Panel
-          </Button>
-        )}
+      {/* Navigasyon Linkleri */}
+      <HStack spacing={{ base: 2, md: 4 }} flex={1} justify="center">
         <Button
           as={Link}
           to="/create-post"
@@ -145,25 +136,32 @@ const Navbar = React.memo(function Navbar({
           color="white"
           fontWeight="bold"
           px={2}
-          ml={4}
           _hover={{ bg: "teal.500" }}
         >
           Create Post
         </Button>
-      </Box>
+        <Button
+          as={Link}
+          to="/about-us" // Yeni About Us sayfası
+          variant="ghost"
+          color="white"
+          fontWeight="bold"
+          px={2}
+          _hover={{ bg: "teal.500" }}
+        >
+          About Us
+        </Button>
+      </HStack>
 
-      <Spacer />
-
+      {/*Auth Butonları / Kullanıcı Menüsü */}
       <Box>
         {!isLoggedIn ? (
-          <>
-            <Button onClick={handleLogout}>logout</Button>
+          <HStack spacing={3}>
             <Button
               as={Link}
               to="/signup"
               colorScheme="whiteAlpha"
               variant="outline"
-              mr={3}
               _hover={{ bg: "whiteAlpha.300" }}
             >
               Sign Up
@@ -177,96 +175,110 @@ const Navbar = React.memo(function Navbar({
             >
               Login
             </Button>
-          </>
+          </HStack>
         ) : (
-          <Menu>
-            <MenuButton
-              as={Button}
-              variant="ghost"
-              p={0}
-              minW={0}
-              _hover={{}}
-              _active={{}}
-              _focus={{ boxShadow: "none" }}
-            >
-              <Box position="relative" display="inline-block">
-                <Avatar
-                  icon={
-                    !profilePhotoUrl ? (
-                      <FaUserCircle style={{ width: "70%", height: "70%" }} />
-                    ) : undefined
-                  }
-                  name={userProfile?.name || userInfo.name || undefined}
-                  src={profilePhotoUrl || undefined}
-                  size="md"
-                  bg="gray.200"
-                  color="teal.600"
-                  overflow="hidden"
-                />
-                {unreadCount > 0 && (
-                  <Badge
-                    position="absolute"
-                    top="0"
-                    right="0"
-                    transform="translate(25%, -25%)"
-                    borderRadius="full"
-                    bg="red.500"
-                    color="white"
-                    fontSize="0.7rem"
-                    fontWeight="bold"
-                    px={2}
-                    height="18px"
-                    minWidth="18px"
-                    display="flex"
-                    alignItems="center"
-                    justifyContent="center"
-                    pointerEvents="none" // Badge üzerine tıklanmayı engeller, sadece gösterim amaçlı
-                    zIndex={1}
-                  >
-                    {unreadCount > 99 ? "99+" : unreadCount}
-                  </Badge>
-                )}
-              </Box>
-            </MenuButton>
-            <MenuList color="gray.800" minW="220px">
-              <Box px={4} py={3} textAlign="center">
-                <Text fontWeight="bold">
-                  {userProfile?.name || userInfo.name || "Kullanıcı"}
-                </Text>
-                <Text fontSize="sm" color="gray.500">
-                  {userProfile?.email || userInfo.email || "-"}
-                </Text>
-                {/* ✅ Kullanıcı adı (username) gösterimi */}
-                <Text fontSize="sm" color="gray.500">
-                  @{userProfile?.username || userInfo.username || "username"}
-                </Text>
-                <Text fontSize="sm" color="gray.400" mt={1}>
-                  Role: <b>{userRole}</b>
-                </Text>
-              </Box>
-              <MenuDivider />
-              <MenuItem
-                onClick={() => navigate("/profile")}
-                justifyContent="center"
+          <HStack spacing={4}> {/* Admin paneli ve Avatarı yan yana */}
+            {userRole === "admin" && (
+              <Button
+                as={Link}
+                to="/admin"
+                variant="ghost"
+                color="white"
+                fontWeight="bold"
+                px={2}
+                _hover={{ bg: "teal.500" }}
               >
-                Profile
-              </MenuItem>
-              <MenuItem
-                onClick={() => navigate("/notifications")}
-                justifyContent="center"
-              >
-                Notifications
-              </MenuItem>
+                Admin Panel
+              </Button>
+            )}
 
-              <MenuItem
-                color="red.500"
-                onClick={handleLogout}
-                justifyContent="center"
+            <Menu>
+              <MenuButton
+                as={Button}
+                variant="ghost"
+                p={0}
+                minW={0}
+                _hover={{}}
+                _active={{}}
+                _focus={{ boxShadow: "none" }}
               >
-                Logout
-              </MenuItem>
-            </MenuList>
-          </Menu>
+                <Box position="relative" display="inline-block">
+                  <Avatar
+                    icon={
+                      !profilePhotoUrl ? (
+                        <FaUserCircle style={{ width: "70%", height: "70%" }} />
+                      ) : undefined
+                    }
+                    name={userProfile?.name || userInfo.name || undefined}
+                    src={profilePhotoUrl || undefined}
+                    size="md"
+                    bg="gray.200"
+                    color="teal.600"
+                    overflow="hidden"
+                  />
+                  {unreadCount > 0 && (
+                    <Badge
+                      position="absolute"
+                      top="0"
+                      right="0"
+                      transform="translate(25%, -25%)"
+                      borderRadius="full"
+                      bg="red.500"
+                      color="white"
+                      fontSize="0.7rem"
+                      fontWeight="bold"
+                      px={2}
+                      height="18px"
+                      minWidth="18px"
+                      display="flex"
+                      alignItems="center"
+                      justifyContent="center"
+                      pointerEvents="none"
+                      zIndex={1}
+                    >
+                      {unreadCount > 99 ? "99+" : unreadCount}
+                    </Badge>
+                  )}
+                </Box>
+              </MenuButton>
+              <MenuList color="gray.800" minW="220px">
+                <Box px={4} py={3} textAlign="center">
+                  <Text fontWeight="bold">
+                    {userProfile?.name || userInfo.name || "Kullanıcı"}
+                  </Text>
+                  <Text fontSize="sm" color="gray.500">
+                    {userProfile?.email || userInfo.email || "-"}
+                  </Text>
+                  <Text fontSize="sm" color="gray.500">
+                    @{userProfile?.username || userInfo.username || "username"}
+                  </Text>
+                  <Text fontSize="sm" color="gray.400" mt={1}>
+                    Role: <b>{userRole}</b>
+                  </Text>
+                </Box>
+                <MenuDivider />
+                <MenuItem
+                  onClick={() => navigate("/profile")}
+                  justifyContent="center"
+                >
+                  Profile
+                </MenuItem>
+                <MenuItem
+                  onClick={() => navigate("/notifications")}
+                  justifyContent="center"
+                >
+                  Notifications
+                </MenuItem>
+                <MenuItem
+                  color="red.500"
+                  onClick={handleLogout}
+                  justifyContent="center"
+                >
+                  Logout
+                </MenuItem>
+              </MenuList>
+            </Menu>
+          </HStack>
         )}
       </Box>
     </Flex>

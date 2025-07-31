@@ -13,7 +13,6 @@ import {
   Modal,
   ModalOverlay,
   ModalContent,
-  ModalCloseButton,
   ModalBody,
   VStack,
   useToast,
@@ -22,7 +21,7 @@ import {
 } from "@chakra-ui/react";
 import { AddIcon } from "@chakra-ui/icons";
 import { useNavigate } from "react-router-dom";
-import NewPostForm from "../components/NewPostForm";
+import NewPostForm from "../components/NewPostForm"; // Yolu doğru olduğundan emin olun
 import { getUserEmail } from "../utils/getUserEmail";
 import { getUserRole } from "../utils/getUserRole";
 import PostCommentSection from "../components/PostCommentSection";
@@ -103,7 +102,7 @@ const Home = React.memo(() => {
           left="0"
           w="100%"
           h="100%"
-          bgImage="url('/path/to/your/pattern.svg')"
+          // bgImage="url('/path/to/your/pattern.svg')" // Kendi desen yolunuzu buraya ekleyin
           bgRepeat="repeat"
           opacity="0.1"
           zIndex="0"
@@ -146,7 +145,6 @@ const Home = React.memo(() => {
               <Text fontSize="2xl" color="gray.500" mb={4}>
                 Henüz hiç gönderi yok.
               </Text>
-              {/* Optional: Add a button to create the first post */}
               <Button
                 colorScheme="teal"
                 size="lg"
@@ -178,7 +176,6 @@ const Home = React.memo(() => {
                     }}
                     showBadge={true}
                     headingSize="xl"
-                    // contentLines={4}
                     showReadMoreButton={true}
                     p={6}
                     borderRadius="lg"
@@ -186,7 +183,6 @@ const Home = React.memo(() => {
                     _hover={{ boxShadow: "lg", transform: "translateY(-2px)" }}
                     transition="all 0.2s ease-in-out"
                   >
-                    {/* Add comment section under each post */}
                     <Box
                       mt={6}
                       pt={4}
@@ -226,9 +222,9 @@ const Home = React.memo(() => {
       <Modal isOpen={isOpen} onClose={onClose} size="xl" isCentered>
         <ModalOverlay />
         <ModalContent>
-          <ModalCloseButton />
-          <ModalBody>
-            <NewPostForm />
+          
+          <ModalBody> {/* ModalBody'nin varsayılan padding'ini kullanabiliriz */}
+            <NewPostForm onClose={onClose} /> {/* onClose prop'unu gönderiyoruz */}
           </ModalBody>
         </ModalContent>
       </Modal>
