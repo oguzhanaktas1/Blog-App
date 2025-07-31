@@ -1,5 +1,3 @@
-// blog-frontend/src/pages/AdminDashboard.tsx
-
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import {
   Box,
@@ -23,10 +21,21 @@ import {
   TabPanels,
   Tab,
   TabPanel,
+  useToast,
+  Modal, // Modal import et
+  ModalOverlay, // ModalOverlay import et
+  ModalContent, // ModalContent import et
+  ModalHeader, // ModalHeader import et
+  ModalCloseButton, // ModalCloseButton import et
+  ModalBody, // ModalBody import et
+  useDisclosure, // useDisclosure import et
 } from "@chakra-ui/react";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react"; // useCallback'i de import et
 import { useNavigate } from "react-router-dom";
 import { getUserRole } from "../utils/getUserRole";
+import PostMenu from "../components/PostMenu";
+import api from "../api/axios";
+import UpdatePostForm from "../components/UpdatePostForm"; // UpdatePostForm'u import et
 
 // Mevcut Interface'ler
 interface User {
@@ -35,35 +44,43 @@ interface User {
   username: string;
   email: string;
   role: string;
-  profilePhoto?: string; // Profil fotoğrafı da eklenebilir
+  profilePhoto?: string;
 }
 
+// Post interface'ini PostContentBoxPost ile uyumlu hale getiriyoruz
+// Çünkü UpdatePostForm'a PostContentBoxPost tipinde bir post göndereceğiz
 interface Post {
   id: number;
   title: string;
   content: string;
-  createdAt: string; // Tarihi de gösterebiliriz
+  createdAt: string;
+  images?: { id: number; url: string }[]; // UpdatePostForm için images ekliyoruz
+  author?: {
+    name?: string | null;
+    username?: string | null;
+    email?: string | null;
+    profilePhoto?: string | null;
+  };
 }
+
 
 interface Comment {
   id: number;
   text: string;
   postId: number;
-  createdAt: string; // Tarihi de gösterebiliriz
+  createdAt: string;
 }
 
-// Yeni Interface'ler
 interface Like {
   id: number;
   postId: number;
-  // userId: number; // Zaten UserDetails içinde olduğu için burada gerek yok
 }
 
 interface Image {
   id: number;
   url: string;
-  uploadedAt: string; // Yükleme tarihi
-  postId?: number; // Hangi posta ait olduğu
+  uploadedAt: string;
+  postId?: number;
 }
 
 interface Reaction {
@@ -77,25 +94,23 @@ interface Reaction {
 interface Notification {
   id: number;
   type: string;
-  message?: string; // Daha önceki bildirim çözümünden sonra 'message' olmalı
+  message?: string;
   createdAt: string;
   read: boolean;
-  senderId: number; // Gönderen kullanıcı ID'si
-  receiverId: number; // Alan kullanıcı ID'si (Zaten bu kullanıcının kendisi)
+  senderId: number;
+  receiverId: number;
   postId?: number;
   commentId?: number;
 }
 
-
-// UserDetails interface'ini güncelliyoruz
 interface UserDetails extends User {
   posts: Post[];
   comments: Comment[];
-  likes: Like[]; // Yeni eklendi
-  images: Image[]; // Yeni eklendi
-  reactions: Reaction[]; // Yeni eklendi
-  sentNotifications: Notification[]; // Yeni eklendi
-  receivedNotifications: Notification[]; // Yeni eklendi
+  likes: Like[];
+  images: Image[];
+  reactions: Reaction[];
+  sentNotifications: Notification[];
+  receivedNotifications: Notification[];
 }
 
 export default function AdminDashboard() {
@@ -105,13 +120,18 @@ export default function AdminDashboard() {
   const [loadingUsers, setLoadingUsers] = useState(false);
   const [loadingDetails, setLoadingDetails] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const toast = useToast();
+
+  // Modal için state ve helper hook'ları
+  const { isOpen, onOpen, onClose } = useDisclosure();
+  const [editingPost, setEditingPost] = useState<Post | null>(null);
 
   const boxBg = useColorModeValue("white", "gray.700");
 
   useEffect(() => {
     const role = getUserRole();
     if (role !== "admin") {
-      navigate("/"); // admin değilse anasayfaya at
+      navigate("/");
       return;
     }
     fetchUsers();
@@ -122,7 +142,6 @@ export default function AdminDashboard() {
     setError(null);
     try {
       const token = localStorage.getItem("token");
-      // Docker için localhost:3000 adresi uygun. Proxy'yi zaten ayarlamış olmanız beklenir.
       const res = await fetch("http://localhost:3000/admin/users", {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -144,13 +163,14 @@ export default function AdminDashboard() {
     setError(null);
     try {
       const token = localStorage.getItem("token");
-      // Docker için localhost:3000 adresi uygun.
       const res = await fetch(`http://localhost:3000/admin/users/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (!res.ok) {
-        const errorData = await res.json(); // Hata mesajını yakalamak için
-        throw new Error(errorData.message || "Kullanıcı detayları yüklenirken hata oluştu.");
+        const errorData = await res.json();
+        throw new Error(
+          errorData.message || "Kullanıcı detayları yüklenirken hata oluştu."
+        );
       }
       const data = await res.json();
       setSelectedUser(data);
@@ -160,6 +180,59 @@ export default function AdminDashboard() {
       setLoadingDetails(false);
     }
   };
+
+  const handlePostDelete = async (postId: number) => {
+    if (!window.confirm("Bu gönderiyi silmek istediğinizden emin misiniz?")) {
+      return;
+    }
+    try {
+      await api.delete(`/posts/${postId}`);
+      toast({
+        title: "Gönderi silindi.",
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+      });
+      setSelectedUser((prev) => {
+        if (!prev) return null;
+        return {
+          ...prev,
+          posts: prev.posts.filter((p) => p.id !== postId),
+        };
+      });
+    } catch (err) {
+      console.error("Post silinirken hata oluştu:", err);
+      toast({
+        title: "Gönderi silinemedi.",
+        description: "Bir hata oluştu, lütfen tekrar deneyin.",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+    }
+  };
+
+  // Post güncellendiğinde selectedUser state'ini güncelleme
+  const handlePostUpdateSuccess = useCallback(
+    (updatedData: { id: number; title: string; content: string; images?: { id: number; url: string; }[] }) => { // Tipi buna göre ayarla
+      setSelectedUser((prev) => {
+        if (!prev) return null;
+        return {
+          ...prev,
+          posts: prev.posts.map((p) =>
+            p.id === updatedData.id ? { ...p, ...updatedData, createdAt: p.createdAt } : p // createdAt'i koru
+          ),
+        };
+      });
+      onClose();
+    },
+    [onClose]
+  );
+
+  const handlePostEdit = useCallback((postToEdit: Post) => {
+    setEditingPost(postToEdit);
+    onOpen();
+  }, [onOpen]);
 
   return (
     <Flex
@@ -268,16 +341,24 @@ export default function AdminDashboard() {
                   {selectedUser.role}
                 </Badge>
               </Text>
-              {selectedUser.profilePhoto && ( // Profil fotoğrafı varsa göster
+              {selectedUser.profilePhoto && (
                 <Text mb={4}>
-                  <strong>Profile Photo:</strong> <a href={selectedUser.profilePhoto} target="_blank" rel="noopener noreferrer" style={{ color: '#319795', textDecoration: 'underline' }}>View Photo</a>
+                  <strong>Profile Photo:</strong>{" "}
+                  <a
+                    href={selectedUser.profilePhoto}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{ color: "#319795", textDecoration: "underline" }}
+                  >
+                    View Photo
+                  </a>
                 </Text>
               )}
 
-              <Divider my={4} /> {/* Ayırıcı */}
+              <Divider my={4} />
 
               {/* TABS BAŞLANGICI */}
-              <Tabs variant="enclosed" colorScheme="teal" isLazy> {/* isLazy ile sadece seçilen tab içeriği render edilir */}
+              <Tabs variant="enclosed" colorScheme="teal" isLazy>
                 <TabList>
                   <Tab>Posts ({selectedUser.posts.length})</Tab>
                   <Tab>Comments ({selectedUser.comments.length})</Tab>
@@ -291,28 +372,54 @@ export default function AdminDashboard() {
                 <TabPanels>
                   {/* Posts TabPanel */}
                   <TabPanel>
-                    <Heading size="sm" mb={2}>Posts</Heading>
+                    <Heading size="sm" mb={2}>
+                      Posts
+                    </Heading>
                     {selectedUser.posts.length ? (
                       <VStack spacing={2} align="start">
                         {selectedUser.posts.map((post) => (
-                          <Box
+                          <Flex
                             key={post.id}
                             p={3}
                             w="100%"
                             borderWidth={1}
                             borderRadius="md"
+                            justifyContent="space-between"
+                            alignItems="flex-start"
                           >
-                            <Text fontSize="sm" color="gray.500">
-                              Post ID: <a href={`/posts/${post.id}`} style={{ color: '#319795', textDecoration: 'underline' }} target="_blank" rel="noopener noreferrer">{post.id}</a>
-                            </Text>
-                            <Text fontWeight="bold">{post.title}</Text>
-                            <Text fontSize="sm" noOfLines={2}>
-                              {post.content}
-                            </Text>
-                            <Text fontSize="xs" color="gray.500">
-                              Created At: {new Date(post.createdAt).toLocaleString()}
-                            </Text>
-                          </Box>
+                            <Box flex="1">
+                              <Text fontSize="sm" color="gray.500">
+                                Post ID:{" "}
+                                <a
+                                  href={`/posts/${post.id}`}
+                                  style={{
+                                    color: "#319795",
+                                    textDecoration: "underline",
+                                  }}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                >
+                                  {post.id}
+                                </a>
+                              </Text>
+                              <Text fontWeight="bold">{post.title}</Text>
+                              <Text fontSize="sm" noOfLines={2}>
+                                {post.content}
+                              </Text>
+                              <Text fontSize="xs" color="gray.500">
+                                Created At: {new Date(post.createdAt).toLocaleString()}
+                              </Text>
+                            </Box>
+                            <Box ml={4}>
+                              <PostMenu
+                                postId={post.id}
+                                postTitle={post.title}
+                                onEdit={() => handlePostEdit(post)} // Post objesini doğrudan gönderiyoruz
+                                onDelete={() => handlePostDelete(post.id)}
+                                canModify={true} // Admin her zaman modify edebilir
+                              />
+                            </Box>
+                          </Flex>
                         ))}
                       </VStack>
                     ) : (
@@ -334,7 +441,18 @@ export default function AdminDashboard() {
                             borderRadius="md"
                           >
                             <Text fontSize="sm" color="gray.500">
-                              Post ID: <a href={`/posts/${comment.postId}`} style={{ color: '#319795', textDecoration: 'underline' }} target="_blank" rel="noopener noreferrer">{comment.postId}</a>
+                              Post ID:{" "}
+                              <a
+                                href={`/posts/${comment.postId}`}
+                                style={{
+                                  color: "#319795",
+                                  textDecoration: "underline",
+                                }}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                              >
+                                {comment.postId}
+                              </a>
                             </Text>
                             <Text mb={1}>{comment.text}</Text>
                             <Text fontSize="xs" color="gray.500">
@@ -355,7 +473,20 @@ export default function AdminDashboard() {
                       <VStack spacing={2} align="start">
                         {selectedUser.likes.map((like) => (
                           <Box key={like.id} p={3} w="100%" borderWidth={1} borderRadius="md">
-                            <Text>Liked Post ID: <a href={`/posts/${like.postId}`} style={{ color: '#319795', textDecoration: 'underline' }} target="_blank" rel="noopener noreferrer">{like.postId}</a></Text>
+                            <Text>
+                              Liked Post ID:{" "}
+                              <a
+                                href={`/posts/${like.postId}`}
+                                style={{
+                                  color: "#319795",
+                                  textDecoration: "underline",
+                                }}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                              >
+                                {like.postId}
+                              </a>
+                            </Text>
                           </Box>
                         ))}
                       </VStack>
@@ -372,8 +503,36 @@ export default function AdminDashboard() {
                         {selectedUser.images.map((image) => (
                           <Box key={image.id} p={3} w="100%" borderWidth={1} borderRadius="md">
                             <Text>Image ID: {image.id}</Text>
-                            <Text>URL: <a href={image.url} target="_blank" rel="noopener noreferrer" style={{ color: '#319795', textDecoration: 'underline' }}>{image.url}</a></Text>
-                            {image.postId && <Text>Associated Post ID: <a href={`/posts/${image.postId}`} style={{ color: '#319795', textDecoration: 'underline' }} target="_blank" rel="noopener noreferrer">{image.postId}</a></Text>}
+                            <Text>
+                              URL:{" "}
+                              <a
+                                href={image.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                style={{
+                                  color: "#319795",
+                                  textDecoration: "underline",
+                                }}
+                              >
+                                {image.url}
+                              </a>
+                            </Text>
+                            {image.postId && (
+                              <Text>
+                                Associated Post ID:{" "}
+                                <a
+                                  href={`/posts/${image.postId}`}
+                                  style={{
+                                    color: "#319795",
+                                    textDecoration: "underline",
+                                  }}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                >
+                                  {image.postId}
+                                </a>
+                              </Text>
+                            )}
                             <Text fontSize="xs" color="gray.500">
                               Uploaded At: {new Date(image.uploadedAt).toLocaleString()}
                             </Text>
@@ -392,9 +551,41 @@ export default function AdminDashboard() {
                       <VStack spacing={2} align="start">
                         {selectedUser.reactions.map((reaction) => (
                           <Box key={reaction.id} p={3} w="100%" borderWidth={1} borderRadius="md">
-                            <Text>Type: <Badge>{reaction.type}</Badge></Text>
-                            {reaction.postId && <Text>To Post ID: <a href={`/posts/${reaction.postId}`} style={{ color: '#319795', textDecoration: 'underline' }} target="_blank" rel="noopener noreferrer">{reaction.postId}</a></Text>}
-                            {reaction.commentId && <Text>To Comment ID: <a href={`/posts/${reaction.commentId}`} style={{ color: '#319795', textDecoration: 'underline' }} target="_blank" rel="noopener noreferrer">{reaction.commentId}</a></Text>}
+                            <Text>
+                              Type: <Badge>{reaction.type}</Badge>
+                            </Text>
+                            {reaction.postId && (
+                              <Text>
+                                To Post ID:{" "}
+                                <a
+                                  href={`/posts/${reaction.postId}`}
+                                  style={{
+                                    color: "#319795",
+                                    textDecoration: "underline",
+                                  }}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                >
+                                  {reaction.postId}
+                                </a>
+                              </Text>
+                            )}
+                            {reaction.commentId && (
+                              <Text>
+                                To Comment ID:{" "}
+                                <a
+                                  href={`/posts/${reaction.commentId}`}
+                                  style={{
+                                    color: "#319795",
+                                    textDecoration: "underline",
+                                  }}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                >
+                                  {reaction.commentId}
+                                </a>
+                              </Text>
+                            )}
                             <Text fontSize="xs" color="gray.500">
                               Created At: {new Date(reaction.createdAt).toLocaleString()}
                             </Text>
@@ -413,11 +604,43 @@ export default function AdminDashboard() {
                       <VStack spacing={2} align="start">
                         {selectedUser.sentNotifications.map((notification) => (
                           <Box key={notification.id} p={3} w="100%" borderWidth={1} borderRadius="md">
-                            <Text>Type: <Badge>{notification.type}</Badge></Text>
+                            <Text>
+                              Type: <Badge>{notification.type}</Badge>
+                            </Text>
                             {notification.message && <Text>Message: {notification.message}</Text>}
                             <Text>Receiver ID: {notification.receiverId}</Text>
-                            {notification.postId && <Text>Related Post ID: <a href={`/posts/${notification.postId}`} style={{ color: '#319795', textDecoration: 'underline' }} target="_blank" rel="noopener noreferrer">{notification.postId}</a></Text>}
-                            {notification.commentId && <Text>Related Comment ID: <a href={`/posts/${notification.commentId}`} style={{ color: '#319795', textDecoration: 'underline' }} target="_blank" rel="noopener noreferrer">{notification.commentId}</a></Text>}
+                            {notification.postId && (
+                              <Text>
+                                Related Post ID:{" "}
+                                <a
+                                  href={`/posts/${notification.postId}`}
+                                  style={{
+                                    color: "#319795",
+                                    textDecoration: "underline",
+                                  }}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                >
+                                  {notification.postId}
+                                </a>
+                              </Text>
+                            )}
+                            {notification.commentId && (
+                              <Text>
+                                Related Comment ID:{" "}
+                                <a
+                                  href={`/posts/${notification.commentId}`}
+                                  style={{
+                                    color: "#319795",
+                                    textDecoration: "underline",
+                                  }}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                >
+                                  {notification.commentId}
+                                </a>
+                              </Text>
+                            )}
                             <Text>Read: {notification.read ? "Yes" : "No"}</Text>
                             <Text fontSize="xs" color="gray.500">
                               Created At: {new Date(notification.createdAt).toLocaleString()}
@@ -437,11 +660,43 @@ export default function AdminDashboard() {
                       <VStack spacing={2} align="start">
                         {selectedUser.receivedNotifications.map((notification) => (
                           <Box key={notification.id} p={3} w="100%" borderWidth={1} borderRadius="md">
-                            <Text>Type: <Badge>{notification.type}</Badge></Text>
+                            <Text>
+                              Type: <Badge>{notification.type}</Badge>
+                            </Text>
                             {notification.message && <Text>Message: {notification.message}</Text>}
                             <Text>Sender ID: {notification.senderId}</Text>
-                            {notification.postId && <Text>Related Post ID: <a href={`/posts/${notification.postId}`} style={{ color: '#319795', textDecoration: 'underline' }} target="_blank" rel="noopener noreferrer">{notification.postId}</a></Text>}
-                            {notification.commentId && <Text>Related Comment ID: <a href={`/posts/${notification.commentId}`} style={{ color: '#319795', textDecoration: 'underline' }} target="_blank" rel="noopener noreferrer">{notification.commentId}</a></Text>}
+                            {notification.postId && (
+                              <Text>
+                                Related Post ID:{" "}
+                                <a
+                                  href={`/posts/${notification.postId}`}
+                                  style={{
+                                    color: "#319795",
+                                    textDecoration: "underline",
+                                  }}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                >
+                                  {notification.postId}
+                                </a>
+                              </Text>
+                            )}
+                            {notification.commentId && (
+                              <Text>
+                                Related Comment ID:{" "}
+                                <a
+                                  href={`/posts/${notification.commentId}`}
+                                  style={{
+                                    color: "#319795",
+                                    textDecoration: "underline",
+                                  }}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                >
+                                  {notification.commentId}
+                                </a>
+                              </Text>
+                            )}
                             <Text>Read: {notification.read ? "Yes" : "No"}</Text>
                             <Text fontSize="xs" color="gray.500">
                               Created At: {new Date(notification.createdAt).toLocaleString()}
@@ -453,11 +708,35 @@ export default function AdminDashboard() {
                       <Text>No received notifications</Text>
                     )}
                   </TabPanel>
-
                 </TabPanels>
               </Tabs>
               {/* TABS BİTİŞİ */}
 
+              {/* Update Post Modal */}
+              <Modal isOpen={isOpen} onClose={onClose} size="xl" isCentered>
+                <ModalOverlay />
+                <ModalContent>
+                  <ModalHeader>Postu Güncelle</ModalHeader>
+                  <ModalCloseButton />
+                  <ModalBody>
+                    {editingPost && (
+                      <UpdatePostForm
+                        post={{
+                          id: editingPost.id,
+                          title: editingPost.title,
+                          content: editingPost.content,
+                          images: editingPost.images?.map((img) => ({
+                            id: img.id,
+                            url: img.url,
+                          })),
+                        }}
+                        onClose={onClose}
+                        onSuccess={handlePostUpdateSuccess}
+                      />
+                    )}
+                  </ModalBody>
+                </ModalContent>
+              </Modal>
             </Box>
           ) : (
             <Text color="gray.500" fontSize="lg" mt={8}>

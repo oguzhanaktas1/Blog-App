@@ -60,3 +60,25 @@ export const deleteNotification = async (req: AuthRequest, res: Response, next: 
     next(error);
   }
 };
+
+export const deleteAllNotifications = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const userId = req.userId;
+    if (!userId) {
+      const error = new Error("Unauthorized: User not authenticated");
+      (error as any).status = 401;
+      return next(error);
+    }
+
+    // Use prisma.notification.deleteMany to delete all notifications
+    // where the receiverId matches the authenticated userId.
+    const deleteResult = await prisma.notification.deleteMany({
+      where: { receiverId: userId },
+    });
+
+    // You can optionally return the count of deleted records
+    res.json({ message: `All notifications (${deleteResult.count}) deleted successfully` });
+  } catch (error) {
+    next(error);
+  }
+};

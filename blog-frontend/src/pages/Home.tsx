@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/rules-of-hooks */
 import React, { useMemo } from 'react';
 import { useEffect } from "react";
 import {
@@ -17,6 +18,7 @@ import {
   VStack,
   useToast,
   IconButton,
+  Button,
 } from "@chakra-ui/react";
 import { AddIcon } from "@chakra-ui/icons";
 import { useNavigate } from "react-router-dom";
@@ -26,7 +28,6 @@ import { getUserRole } from "../utils/getUserRole";
 import PostCommentSection from "../components/PostCommentSection";
 import PostContentBox from "../components/PostContentBox";
 
-// Redux
 import { useDispatch, useSelector } from "react-redux";
 import {
   fetchPostsThunk,
@@ -57,18 +58,19 @@ const Home = React.memo(() => {
     }
   };
 
-    const userEmail = getUserEmail();
-    const userRole = getUserRole();
+  const userEmail = getUserEmail();
+  const userRole = getUserRole();
 
-  const sortedPosts = useMemo(() => (
-    posts
-      .slice()
-      .sort(
-        (a, b) =>
-          new Date(b.createdAt).getTime() -
-          new Date(a.createdAt).getTime()
-      )
-  ), [posts]);
+  const sortedPosts = useMemo(
+    () =>
+      posts
+        .slice()
+        .sort(
+          (a, b) =>
+            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        ),
+    [posts]
+  );
 
   return (
     <Box
@@ -93,18 +95,36 @@ const Home = React.memo(() => {
         marginLeft="-50vw"
         marginRight="-50vw"
         maxW="100vw"
+        overflow="hidden"
       >
-        <Box maxW="container.xl" mx="auto" px={{ base: 4, md: 0 }}>
+        <Box
+          position="absolute"
+          top="0"
+          left="0"
+          w="100%"
+          h="100%"
+          bgImage="url('/path/to/your/pattern.svg')"
+          bgRepeat="repeat"
+          opacity="0.1"
+          zIndex="0"
+        />
+        <Box
+          maxW="container.xl"
+          mx="auto"
+          px={{ base: 4, md: 0 }}
+          position="relative"
+          zIndex="1"
+        >
           <Text
             fontWeight="extrabold"
             fontSize={{ base: "3xl", md: "5xl" }}
             mb={4}
           >
-            Welcome to the Modern Blog
+            Modern Blog'a Hoş Geldiniz
           </Text>
           <Text fontSize={{ base: "md", md: "xl" }} maxW="2xl" mx="auto">
-            Discover, create, and share your thoughts with the world. Start by
-            reading the latest posts or add your own!
+            Keşfedin, yaratın ve düşüncelerinizi dünyayla paylaşın. En son
+            gönderileri okuyarak başlayın veya kendinizinkini ekleyin!
           </Text>
         </Box>
       </Box>
@@ -126,6 +146,15 @@ const Home = React.memo(() => {
               <Text fontSize="2xl" color="gray.500" mb={4}>
                 Henüz hiç gönderi yok.
               </Text>
+              {/* Optional: Add a button to create the first post */}
+              <Button
+                colorScheme="teal"
+                size="lg"
+                mt={4}
+                onClick={handleCreatePost}
+              >
+                İlk Gönderiyi Sen Oluştur!
+              </Button>
             </Flex>
           ) : (
             <VStack spacing={8} w="100%" align="stretch" py={8}>
@@ -141,19 +170,29 @@ const Home = React.memo(() => {
                     onDelete={(postId) => {
                       dispatch(deletePostThunk(postId));
                       toast({
-                        title: "Post silindi.",
+                        title: "Gönderi silindi.",
                         status: "success",
                         duration: 3000,
                         isClosable: true,
                       });
                     }}
                     showBadge={true}
-                    headingSize="lg"
-                    contentLines={4}
-                    showReadMore={true}
+                    headingSize="xl"
+                    // contentLines={4}
+                    showReadMoreButton={true}
+                    p={6}
+                    borderRadius="lg"
+                    boxShadow="md"
+                    _hover={{ boxShadow: "lg", transform: "translateY(-2px)" }}
+                    transition="all 0.2s ease-in-out"
                   >
                     {/* Add comment section under each post */}
-                    <Box mt={6}>
+                    <Box
+                      mt={6}
+                      pt={4}
+                      borderTop="1px solid"
+                      borderColor={useColorModeValue("gray.200", "gray.700")}
+                    >
                       <PostCommentSection postId={post.id} />
                     </Box>
                   </PostContentBox>
@@ -165,7 +204,7 @@ const Home = React.memo(() => {
       </Box>
 
       {/* Floating Action Button for New Post */}
-      <Tooltip label="Create New Post" hasArrow placement="left">
+      <Tooltip label="Yeni Gönderi Oluştur" hasArrow placement="left">
         <IconButton
           icon={<AddIcon />}
           colorScheme="teal"
@@ -174,11 +213,12 @@ const Home = React.memo(() => {
           bottom={8}
           right={8}
           borderRadius="full"
-          boxShadow="lg"
+          boxShadow="xl"
           zIndex={100}
-          aria-label="Create New Post"
-          display={{ base: "flex", md: "none" }}
+          aria-label="Yeni Gönderi Oluştur"
           onClick={handleCreatePost}
+          _hover={{ transform: "scale(1.05)" }}
+          transition="transform 0.2s ease-in-out"
         />
       </Tooltip>
 

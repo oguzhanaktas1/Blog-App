@@ -32,11 +32,7 @@ interface Props {
     images?: ImageObj[];
   };
   onClose: () => void;
-  onSuccess: (updatedPost: {
-    id: number;
-    title: string;
-    content: string;
-  }) => void;
+  onSuccess: (updatedPost: { id: number; title: string; content: string; images?: { id: number; url: string; }[] }) => void;
 }
 
 const UpdatePostForm = ({ post, onClose, onSuccess }: Props) => {

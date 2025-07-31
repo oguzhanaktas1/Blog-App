@@ -17,7 +17,7 @@ import type { AppDispatch } from "../store";
 import api from "../api/axios";
 import PostCommentSection from "../components/PostCommentSection";
 import PostContentBox from "../components/PostContentBox";
-import socket from "../utils/socket"; // 👈 socket bağlantısı
+import socket from "../utils/socket";
 
 interface Post {
   id: number;
@@ -28,14 +28,19 @@ interface Post {
   author?: {
     name: string;
     email: string;
+    profilePhoto?: string;
   };
+  images?: {
+    id: number;
+    url: string;
+  }[];
 }
 
 const PostDetail = () => {
   const { id } = useParams<{ id: string }>();
   const [post, setPost] = useState<Post | null>(null);
   const [loading, setLoading] = useState(true);
-  const [viewerCount, setViewerCount] = useState<number>(0); // 👈 canlı izleyici sayısı
+  const [viewerCount, setViewerCount] = useState<number>(0); // canlı izleyici sayısı
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
   const toast = useToast();
@@ -54,7 +59,7 @@ const PostDetail = () => {
     fetchPost();
   }, [id]);
 
-  // 👇 Socket.io entegrasyonu
+  // Socket.io entegrasyonu
   useEffect(() => {
     if (!id) return;
 
@@ -83,7 +88,7 @@ const PostDetail = () => {
             </Flex>
           ) : post ? (
             <>
-              {/* 👇 İzleyici sayacı badge */}
+              {/* İzleyici sayacı badge */}
               <Flex justify="flex-end" mt={4}>
                 <Badge colorScheme="purple" fontSize="md" px={3} py={1}>
                   👀 {viewerCount} kişi bu yazıyı okuyor
@@ -121,6 +126,8 @@ const PostDetail = () => {
                 showBadge={true}
                 headingSize="2xl"
                 showButton={false}
+                displayFullContent={true}
+                showReadMoreButton={false}
               >
                 <PostCommentSection postId={post.id} />
               </PostContentBox>

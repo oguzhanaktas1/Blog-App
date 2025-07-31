@@ -7,11 +7,6 @@ import {
   Badge,
   useColorModeValue,
   IconButton,
-  Menu,
-  MenuButton,
-  MenuList,
-  MenuItem,
-  useDisclosure,
   Modal,
   ModalOverlay,
   ModalContent,
@@ -21,16 +16,20 @@ import {
   useToast,
   Button,
   Avatar,
+  useDisclosure,
+  // Yeni eklenenler: BoxProps'ı içe aktarıyoruz
+  // Yeni eklenenler: BoxProps'ı içe aktarıyoruz
+  type BoxProps,
 } from "@chakra-ui/react";
 import type { ReactNode } from "react";
-import { FiMoreVertical } from "react-icons/fi";
 import UpdatePostForm from "./UpdatePostForm";
-import React, { useCallback, useMemo, useState } from "react";
+import React, { useCallback, useMemo } from "react";
 import { AiFillHeart, AiOutlineHeart } from "react-icons/ai";
 import { likePost, unlikePost, isPostLiked } from "../services/post";
 import { useNavigate } from "react-router-dom";
 import Reactions from "./Reactions";
-import { getUserInfo } from "../utils/getUserInfo"; // doğru path ile
+import { getUserInfo } from "../utils/getUserInfo";
+import PostMenu from "./PostMenu";
 
 interface Author {
   name?: string | null;
@@ -52,7 +51,8 @@ export interface PostContentBoxPost {
   }[];
 }
 
-interface PostContentBoxProps {
+// PostContentBoxProps arayüzünü BoxProps ile genişletiyoruz
+interface PostContentBoxProps extends BoxProps {
   post: PostContentBoxPost;
   userEmail?: string | null;
   userRole?: string | null;
@@ -62,8 +62,11 @@ interface PostContentBoxProps {
   showBadge?: boolean;
   headingSize?: string;
   showButton?: boolean;
-  contentLines?: number;
-  showReadMore?: boolean;
+  showReadMoreButton?: boolean;
+  displayFullContent?: boolean;
+  // `contentLines` prop'u kaldırıldı çünkü `noOfLines` Chakra UI'ın kendi prop'u.
+  // Bu durumda `contentLines` diye özel bir prop'a gerek kalmıyor.
+  // Eğer özel bir mantıkla satır sayısını kısıtlamak isteseydiniz burada tanımlardınız.
 }
 
 const PostContentBox = React.memo(
@@ -77,6 +80,10 @@ const PostContentBox = React.memo(
     showBadge = true,
     headingSize = "xl",
     showButton = true,
+    showReadMoreButton = true,
+    displayFullContent = false,
+    // ...rest operatörü ile kalan tüm prop'ları yakalıyoruz
+    ...rest // `BoxProps` içindeki tüm stil prop'ları buraya gelir (p, borderRadius, boxShadow, _hover, transition vb.)
   }: PostContentBoxProps) => {
     const bg = useColorModeValue("white", "gray.800");
     const boxShadow = useColorModeValue("md", "dark-lg");
@@ -92,7 +99,6 @@ const PostContentBox = React.memo(
       React.useState<PostContentBoxPost | null>(null);
     const [liked, setLiked] = React.useState<boolean>(false);
     const [likeLoading, setLikeLoading] = React.useState<boolean>(false);
-    const [showAllContent] = useState(false);
     const currentUser = getUserInfo();
     const navigate = useNavigate();
 
@@ -156,50 +162,6 @@ const PostContentBox = React.memo(
       onDelete?.(post.id);
     }, [onDelete, post.id]);
 
-    const renderPostMenu = () => (
-      <Menu>
-        <MenuButton
-          as={IconButton}
-          icon={<FiMoreVertical />}
-          variant="ghost"
-          size="sm"
-          aria-label="Post options"
-        />
-        <MenuList>
-          {canModify && (
-            <MenuItem
-              onClick={() => {
-                setEditingPost(post);
-                onOpen();
-              }}
-            >
-              Güncelle
-            </MenuItem>
-          )}
-          <MenuItem
-            onClick={() => {
-              const url = `${window.location.origin}/posts/${post.id}`;
-              navigator.clipboard.writeText(url);
-              toast({
-                title: "Bağlantı kopyalandı!",
-                description: "Gönderi bağlantısı panoya kopyalandı.",
-                status: "info",
-                duration: 2500,
-                isClosable: true,
-              });
-            }}
-          >
-            Paylaş
-          </MenuItem>
-          {canModify && (
-            <MenuItem color="red.500" onClick={handleDelete}>
-              Sil
-            </MenuItem>
-          )}
-        </MenuList>
-      </Menu>
-    );
-
     const authorName = useMemo(
       () => post.author?.name ?? "Bilinmiyor",
       [post.author?.name]
@@ -216,15 +178,13 @@ const PostContentBox = React.memo(
     }, [post.author?.profilePhoto]);
     const images = useMemo(() => post.images || [], [post.images]);
 
-    // Determine if content is longer than 4 lines
-    const contentLines = useMemo(
-      () => post.content.split("\n"),
-      [post.content]
-    );
-    const isLongContent = contentLines.length > 4;
-    const displayedContent = showAllContent
+    // `contentLines` prop'u kaldırıldığı için `noOfLines` Chakra UI prop'unu kullanacağız.
+    // Metnin tamamının mı yoksa sadece 4 satırın mı gösterileceğini kontrol eder.
+    const isLongContent = post.content.split("\n").length > 4;
+    const displayedContent = displayFullContent
       ? post.content
-      : contentLines.slice(0, 4).join("\n");
+      : post.content.split("\n").slice(0, 4).join("\n");
+
 
     return (
       <Box
@@ -234,6 +194,7 @@ const PostContentBox = React.memo(
         boxShadow={boxShadow}
         transition="all 0.2s"
         w="100%"
+        {...rest} // Buraya `...rest` prop'larını yayıyoruz
       >
         <Flex justify="space-between" align="center" mb={3}>
           <Flex align="center" mb={2}>
@@ -271,14 +232,22 @@ const PostContentBox = React.memo(
                 Yeni
               </Badge>
             )}
-            {renderPostMenu()}
+            <PostMenu
+              postId={post.id}
+              postTitle={post.title}
+              onEdit={() => {
+                setEditingPost(post);
+                onOpen();
+              }}
+              onDelete={handleDelete}
+              canModify={canModify}
+            />
           </Flex>
         </Flex>
-        {/* Post title, only render if present */}
         {post.title && (
           <Heading
             fontSize={{ base: headingSize, md: headingSize }}
-            noOfLines={1}
+            noOfLines={displayFullContent ? undefined : 1} // Başlık için tek satır sınırı
             flex="1"
             mr={4}
             wordBreak="break-word"
@@ -310,11 +279,11 @@ const PostContentBox = React.memo(
           color={useColorModeValue("gray.700", "gray.300")}
           mb={4}
           fontSize="md"
+          noOfLines={displayFullContent ? undefined : (isLongContent ? 4 : undefined)} // İçerik için satır sınırı
         >
           {displayedContent}
         </Box>
 
-        {/* Like (Kalp) Butonu */}
         <IconButton
           aria-label={liked ? "Beğenmekten vazgeç" : "Beğen"}
           icon={liked ? <AiFillHeart color="red" /> : <AiOutlineHeart />}
@@ -327,8 +296,7 @@ const PostContentBox = React.memo(
 
         <Reactions postId={post.id} userId={currentUser.userId!} />
 
-        {/* Devamını Oku butonu sadece içerik 4 satırdan uzunsa ve henüz tamamı gösterilmiyorsa */}
-        {isLongContent && !showAllContent && (
+        {(isLongContent && showReadMoreButton && !displayFullContent) && (
           <Button
             mt="auto"
             size="sm"
@@ -342,7 +310,7 @@ const PostContentBox = React.memo(
           </Button>
         )}
 
-        {showButton && (
+        {showButton && !displayFullContent && !isLongContent && (
           <Button
             mt={2}
             size="sm"
@@ -370,7 +338,7 @@ const PostContentBox = React.memo(
                     title: post.title,
                     content: post.content,
                     images: post.images?.map((img, idx) => ({
-                      id: (img as any).id ?? idx, // backend'den id geliyorsa kullan, yoksa index
+                      id: (img as any).id ?? idx,
                       url: img.url,
                     })),
                   }}

@@ -89,7 +89,7 @@ export const addPostReaction = async (req: AuthRequest, res: Response, next: Nex
           message: notificationMessage,
           postId: postId,
           type: "reaction",
-          reactionStatus: reactionStatus, // You can send this for specific UI updates if needed
+          reactionStatus: reactionStatus,
         });
       }
     }

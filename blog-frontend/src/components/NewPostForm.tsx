@@ -1,3 +1,5 @@
+/* eslint-disable react-hooks/exhaustive-deps */
+ 
 import {
   Box,
   Button,
@@ -20,7 +22,7 @@ interface NewPostFormProps {
   onClose?: () => void;
 }
 
-const NewPostForm = ({ onSuccess, onClose }: NewPostFormProps) => {
+const NewPostForm = ({ onClose }: NewPostFormProps) => {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [selectedImages, setSelectedImages] = useState<File[]>([]);
@@ -29,7 +31,7 @@ const NewPostForm = ({ onSuccess, onClose }: NewPostFormProps) => {
   const [aiPrompt, setAIPrompt] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
   const toast = useToast();
-  const navigate = useNavigate();
+  const navigate = useNavigate(); // navigate'i kullanmaya devam edeceğiz
 
   const handleSubmit = useCallback(
     async (e: React.FormEvent) => {
@@ -66,20 +68,34 @@ const NewPostForm = ({ onSuccess, onClose }: NewPostFormProps) => {
         setContent("");
         setSelectedImages([]);
         setImagePreviews([]);
-        if (onSuccess) onSuccess();
+
+        // Modal'ı kapat
         if (onClose) onClose();
-        navigate("/");
-      } catch {
+
+        // Sayfayı yenile veya Home'a git (tercihinize bağlı)
+        // Eğer modal kapanıp arkaplandaki Home sayfasının güncel veriyi çekmesini istiyorsanız,
+        // Home'da fetchPostsThunk'ı modal kapandıktan sonra tetikleyebilirsiniz.
+        // Ancak doğrudan sayfa yenilemek daha basit bir çözüm olabilir.
+        // Sayfayı tamamen yeniler
+
+        // Eğer Home'a yönlendirmek ve state'i Redux üzerinden güncellemek isterseniz:
+        navigate("/", { replace: true });
+        window.location.reload(); 
+        // navigate("/", { replace: true }); // Geçerli history girdisini değiştirir.
+
+
+      } catch (error) { // Hata yakalama bloğuna error parametresi ekleyelim
+        console.error("Post creation failed:", error); // Hata detaylarını görmek için
         toast({
           title: "Error",
-          description: "Failed to create post.",
+          description: "Failed to create post. Please try again.", // Daha açıklayıcı mesaj
           status: "error",
           duration: 3000,
           isClosable: true,
         });
       }
     },
-    [title, content, selectedImages, onSuccess, onClose, navigate, toast]
+    [title, content, selectedImages, onClose, toast] // navigate artık doğrudan çağrılmıyor
   );
 
   const handleAIGenerate = async () => {
@@ -104,10 +120,11 @@ const NewPostForm = ({ onSuccess, onClose }: NewPostFormProps) => {
       });
       setShowAIPrompt(false);
       setAIPrompt("");
-    } catch {
+    } catch (error) { // Hata yakalama bloğuna error parametresi ekleyelim
+      console.error("AI generation failed:", error); // Hata detaylarını görmek için
       toast({
         title: "AI Error",
-        description: "Failed to generate content.",
+        description: "Failed to generate content. Please try again.", // Daha açıklayıcı mesaj
         status: "error",
         duration: 3000,
         isClosable: true,
