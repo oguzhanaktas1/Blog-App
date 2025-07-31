@@ -42,6 +42,11 @@ router.get(
         include: {
           posts: true,
           comments: true,
+          likes: true,
+          images: true,
+          reactions: true,
+          sentNotifications: true,
+          receivedNotifications: true,
         },
       });
 
