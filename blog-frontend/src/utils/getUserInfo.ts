@@ -1,5 +1,6 @@
 interface TokenPayload {
   name: string;
+  username: string;
   email: string;
   role?: string;
   userId?: number;
@@ -14,6 +15,7 @@ function base64UrlDecode(str: string) {
 
 export function getUserInfo(): {
   name: string | null;
+  username: string | null;
   email: string | null;
   role: string | null;
   userId: number | null;
@@ -23,6 +25,7 @@ export function getUserInfo(): {
   if (!token)
     return {
       name: null,
+      username: null,
       email: null,
       role: null,
       userId: null,
@@ -34,14 +37,16 @@ export function getUserInfo(): {
     const decoded: TokenPayload = JSON.parse(base64UrlDecode(payload));
     return {
       name: decoded.name || null,
+      username: decoded.name || null,
       email: decoded.email || null,
       role: decoded.role || null,
       userId: decoded.userId || null,
-      profilePhoto: decoded.profilePhoto || null, // eklendi
+      profilePhoto: decoded.profilePhoto || null,
     };
   } catch {
     return {
       name: null,
+      username: null,
       email: null,
       role: null,
       userId: null,

@@ -12,32 +12,35 @@ const io = new Server(httpServer, {
   },
 });
 
-// Kullanıcı socketleri (userId -> Set<socket.id>)
+export const onlineUsers = new Map<string, string>();
 const connectedUsers = new Map<string, Set<string>>();
-
-// Socket ID'yi hangi postId odasında tuttuğumuzu izlemek için:
 const socketToPostMap = new Map<string, string>(); // socket.id -> postId
 
 io.on("connection", (socket) => {
   console.log("Yeni kullanıcı bağlandı:", socket.id);
 
+  socket.on("user-online", (userId: number) => {
+    onlineUsers.set(String(userId), socket.id);
+  });
+
   socket.on("register", (userId: string | number) => {
+    console.log("Kayıt olan userId:", userId);
     const id = userId.toString();
     const existing = connectedUsers.get(id) || new Set();
     existing.add(socket.id);
     connectedUsers.set(id, existing);
+    console.log("Tüm bağlı kullanıcılar:", connectedUsers);
 
     console.log(`${id} socket ${socket.id} ile bağlandı`);
   });
 
   socket.on("join_post", (postId: string) => {
     socket.join(postId);
-    socketToPostMap.set(socket.id, postId); // takibe al
+    socketToPostMap.set(socket.id, postId);
 
     console.log(`Kullanıcı ${socket.id}, post-${postId} odasına katıldı.`);
 
-    const viewerCount = io.sockets.adapter.rooms.get(postId)?.size || 0;
-    io.to(postId).emit("viewer_count", viewerCount);
+    sendViewerCount(postId);
   });
 
   socket.on("leave_post", (postId: string) => {
@@ -46,13 +49,7 @@ io.on("connection", (socket) => {
 
     console.log(`Kullanıcı ${socket.id}, post-${postId} odasından ayrıldı.`);
 
-    const viewerCount = io.sockets.adapter.rooms.get(postId)?.size || 0;
-    io.to(postId).emit("viewer_count", viewerCount);
-  });
-
-  socket.on("new_comment", (data) => {
-    const { postId, comment } = data;
-    io.to(postId).emit("receive_comment", comment);
+    sendViewerCount(postId);
   });
 
   socket.on("disconnect", () => {
@@ -61,12 +58,8 @@ io.on("connection", (socket) => {
       socket.leave(postId);
       socketToPostMap.delete(socket.id);
 
-      const viewerCount = io.sockets.adapter.rooms.get(postId)?.size || 0;
-      io.to(postId).emit("viewer_count", viewerCount);
-
-      console.log(
-        `Kullanıcı ${socket.id}, post-${postId} odasından ayrıldı (disconnect).`
-      );
+      sendViewerCount(postId);
+      console.log(`Kullanıcı ${socket.id}, post-${postId} odasından ayrıldı (disconnect).`);
     }
 
     for (const [userId, socketSet] of connectedUsers.entries()) {
@@ -84,6 +77,39 @@ io.on("connection", (socket) => {
     console.log("Kullanıcı ayrıldı:", socket.id);
   });
 
+  socket.on("new_comment", async ({ postId, comment }) => {
+    io.to(postId).emit("receive_comment", comment);
+  
+    if (!comment || !comment.content) return;
+  
+    const mentionMatch = comment.content.match(/@(\w+)/);
+    if (!mentionMatch) return;
+  
+    const mentionedUsername = mentionMatch[1];
+  
+    try {
+      const mentionedUser = await prisma.user.findUnique({
+        where: { username: mentionedUsername },
+      });
+  
+      if (mentionedUser) {
+        const socketSet = connectedUsers.get(mentionedUser.id.toString());
+        if (socketSet) {
+          for (const socketId of socketSet) {
+            io.to(socketId).emit("mention", {
+              message: `${comment.author.name} seni bir yorumda etiketledi.`,
+              postId,
+            });
+          }
+        }
+      }
+    } catch (err) {
+      console.error("Mention kontrolü hatası:", err);
+    }
+  });
+  
+  
+
   socket.on("react-to-post", async ({ postId, userId, type }) => {
     try {
       const existing = await prisma.reaction.findFirst({
@@ -91,16 +117,10 @@ io.on("connection", (socket) => {
       });
 
       if (existing) {
-        // Toggle: remove reaction
         await prisma.reaction.delete({ where: { id: existing.id } });
       } else {
-        // Add reaction
         await prisma.reaction.create({
-          data: {
-            postId,
-            userId,
-            type,
-          },
+          data: { postId, userId, type },
         });
       }
 
@@ -110,44 +130,42 @@ io.on("connection", (socket) => {
         _count: true,
       });
 
-      io.emit("post-reaction-update", {
-        postId,
-        reactions,
-      });
+      io.emit("post-reaction-update", { postId, reactions });
     } catch (error) {
       console.error("Reaction error:", error);
     }
   });
 
   socket.on("react-to-comment", async ({ commentId, userId, type }) => {
-    // Benzer yapı, sadece commentId ile
-    const existing = await prisma.reaction.findFirst({
-      where: { commentId, userId, type },
-    });
-
-    if (existing) {
-      await prisma.reaction.delete({ where: { id: existing.id } });
-    } else {
-      await prisma.reaction.create({
-        data: {
-          commentId,
-          userId,
-          type,
-        },
+    try {
+      const existing = await prisma.reaction.findFirst({
+        where: { commentId, userId, type },
       });
+
+      if (existing) {
+        await prisma.reaction.delete({ where: { id: existing.id } });
+      } else {
+        await prisma.reaction.create({
+          data: { commentId, userId, type },
+        });
+      }
+
+      const reactions = await prisma.reaction.groupBy({
+        by: ["type"],
+        where: { commentId },
+        _count: true,
+      });
+
+      io.emit("comment-reaction-update", { commentId, reactions });
+    } catch (error) {
+      console.error("Comment reaction error:", error);
     }
-
-    const reactions = await prisma.reaction.groupBy({
-      by: ["type"],
-      where: { commentId },
-      _count: true,
-    });
-
-    io.emit("comment-reaction-update", {
-      commentId,
-      reactions,
-    });
   });
 });
+
+function sendViewerCount(postId: string) {
+  const viewerCount = io.sockets.adapter.rooms.get(postId)?.size || 0;
+  io.to(postId).emit("viewer_count", viewerCount);
+}
 
 export { io, httpServer, connectedUsers };

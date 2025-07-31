@@ -104,7 +104,7 @@ export const getCommentReactions = async (req: AuthRequest, res: Response, next:
       : null;
 
     res.status(200).json({
-      reactions: grouped.map((g) => ({
+      reactions: grouped.map((g: { type: any; _count: any; }) => ({
         type: g.type,
         count: g._count,
         isReactedByCurrentUser: userReaction?.type === g.type,

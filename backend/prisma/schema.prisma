@@ -17,6 +17,7 @@ datasource db {
 model User {
   id           Int       @id @default(autoincrement())
   name         String
+  username     String    @unique
   email        String    @unique
   password     String
   role         String    @default("user")
@@ -26,6 +27,8 @@ model User {
   likes        Like[]
   images       Image[]   // Kullanıcının yüklediği resimler
   reactions Reaction[]
+  sentNotifications     Notification[] @relation("SentNotifications")
+  receivedNotifications Notification[] @relation("ReceivedNotifications")
 }
 
 model Post {
@@ -39,6 +42,7 @@ model Post {
   likes      Like[]
   images     Image[]   // Gönderiye eklenen resimler
   reactions Reaction[]
+  notifications Notification[]
 }
 
 model Comment {
@@ -50,6 +54,7 @@ model Comment {
   author    User     @relation(fields: [authorId], references: [id])
   createdAt DateTime @default(now())
   reactions Reaction[]
+  notifications Notification[]
 }
 
 model Like {
@@ -88,4 +93,25 @@ model Reaction {
   createdAt DateTime @default(now())
 
   @@unique([userId, postId, commentId, type]) // same user can't react twice to same post/comment with same type
+}
+
+model Notification {
+  id          Int      @id @default(autoincrement())
+  type        String   // "mention", "comment", "like", "reaction" gibi
+
+  receiverId  Int
+  receiver    User     @relation("ReceivedNotifications", fields: [receiverId], references: [id])
+
+  senderId    Int
+  sender      User     @relation("SentNotifications", fields: [senderId], references: [id])
+
+  postId      Int?     // Bildirim hangi gönderiyle ilgiliyse
+  post        Post?    @relation(fields: [postId], references: [id])
+
+  commentId   Int?     // Bildirim bir yorumla ilgiliyse
+  comment     Comment? @relation(fields: [commentId], references: [id])
+
+  message     String?  // Gösterilecek mesaj (opsiyonel)
+  read        Boolean  @default(false)
+  createdAt   DateTime @default(now())
 }

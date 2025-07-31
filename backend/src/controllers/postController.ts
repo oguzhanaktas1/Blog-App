@@ -275,7 +275,7 @@ export const getLikedPosts = async (req: AuthRequest, res: Response, next: NextF
       },
       orderBy: { id: "desc" },
     });
-    const posts = likes.map(like => like.post);
+    const posts = likes.map((like: { post: any; }) => like.post);
     res.status(200).json(posts);
     return;
   } catch (err) {

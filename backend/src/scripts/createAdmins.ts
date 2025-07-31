@@ -4,6 +4,7 @@ import bcrypt from "bcryptjs";
 const admins = [
   {
     name: "Main Admin",
+    username: "mainadmin",
     email: "aktasoguzhan80@gmail.com",
     password: "admin123",
   },
@@ -19,6 +20,7 @@ async function main() {
         await prisma.user.create({
           data: {
             name: admin.name,
+            username: admin.username,
             email: admin.email,
             password: hashedPassword,
             role: "admin", // Kullanıcı modeli role içeriyor olmalı

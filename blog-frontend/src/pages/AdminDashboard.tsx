@@ -23,6 +23,7 @@ import { getUserRole } from "../utils/getUserRole";
 interface User {
   id: number;
   name: string;
+  username: string;
   email: string;
   role: string;
 }
@@ -155,8 +156,9 @@ export default function AdminDashboard() {
             <Table variant="striped" colorScheme="gray" size="md" mb={10}>
               <Thead>
                 <Tr>
-                  <Th>Name</Th>
                   <Th>Email</Th>
+                  <Th>Name</Th>
+                  <Th>Username</Th>
                   <Th>Role</Th>
                 </Tr>
               </Thead>
@@ -168,6 +170,7 @@ export default function AdminDashboard() {
                     onClick={() => fetchUserDetails(user.id)}
                   >
                     <Td>{user.name}</Td>
+                    <Td>{user.username}</Td>
                     <Td>{user.email}</Td>
                     <Td>
                       <Badge
@@ -193,6 +196,9 @@ export default function AdminDashboard() {
               </Heading>
               <Text>
                 <strong>Name:</strong> {selectedUser.name}
+              </Text>
+              <Text>
+                <strong>Username:</strong> {selectedUser.username}
               </Text>
               <Text>
                 <strong>Email:</strong> {selectedUser.email}

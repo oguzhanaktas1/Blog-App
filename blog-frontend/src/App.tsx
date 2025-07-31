@@ -14,6 +14,9 @@ import NotFoundPage from "./pages/404";
 import Profile from "./pages/Profile";
 import socket from "./utils/socket";
 import NotificationListener from "./components/NotificationListener";
+import SocketMentionHandler from "./components/SocketMentionHandler";
+import NotificationsPage from "./pages/NotificationsPage";
+import SocketNotificationHandler from "./components/SocketNotificationHandler";
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(() => {
@@ -24,6 +27,10 @@ function App() {
     const token = localStorage.getItem("token");
     const userData = localStorage.getItem("user");
   
+    if ("Notification" in window && Notification.permission !== "granted") {
+      Notification.requestPermission();
+    }
+    
     if (token && userData) {
       const user = JSON.parse(userData);
       socket.emit("register", user.id);
@@ -41,7 +48,8 @@ function App() {
 
         {/* Bildirim listener */}
         <NotificationListener />
-
+        <SocketMentionHandler />
+        <SocketNotificationHandler />
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/signup" element={<SignupPage />} />
@@ -52,6 +60,7 @@ function App() {
           <Route path="/create-post" element={<CreatePostPage />} />
           <Route path="/posts/:id" element={<PostDetail />} />
           <Route path="/profile" element={<Profile />} />
+          <Route path="/notifications" element={<NotificationsPage />} />
           {/* 404 fallback route */}
           <Route path="*" element={<NotFoundPage />} />
         </Routes>

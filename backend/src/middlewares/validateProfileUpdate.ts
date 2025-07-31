@@ -3,6 +3,7 @@ import { Request, Response, NextFunction } from "express";
 
 const profileUpdateSchema = Joi.object({
   name: Joi.string().optional(),
+  username: Joi.string().optional(),
   email: Joi.string().email().optional(),
   profilePhoto: Joi.string().optional(),
 });

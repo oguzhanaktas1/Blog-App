@@ -22,4 +22,6 @@ router.delete("/comments/:commentId", authenticateToken, async (req: AuthRequest
   await deleteComment(req, res, next);
 });
 
+router.post("/comments", addComment);
+
 export default router; 

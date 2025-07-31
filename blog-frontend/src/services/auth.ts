@@ -3,6 +3,7 @@ import axios from "../utils/axios";
 type User = {
   id: number;
   name: string;
+  username: string;
   email: string;
 };
 
@@ -11,7 +12,7 @@ export interface AuthResponse {
   user: User;
 }
 
-export const signup = async (data: { name: string; email: string; password: string }): Promise<AuthResponse> => {
+export const signup = async (data: { name: string; username: string; email: string; password: string }): Promise<AuthResponse> => {
   const res = await axios.post("/auth/signup", data);
   return res.data as AuthResponse;
 };

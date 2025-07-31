@@ -7,6 +7,7 @@ import { login as loginApi, signup as signupApi } from "../../services/auth";
 interface User {
   id: number;
   name: string;
+  username: string;
   email: string;
 }
 
@@ -41,7 +42,7 @@ export const loginThunk = createAsyncThunk<
 
 export const signupThunk = createAsyncThunk<
   AuthResponse,
-  { name: string; email: string; password: string },
+  { name: string; username: string; email: string; password: string },
   { rejectValue: string }
 >('auth/signup', async (data, { rejectWithValue }) => {
   try {

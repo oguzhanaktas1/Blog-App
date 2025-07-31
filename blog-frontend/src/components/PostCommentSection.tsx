@@ -53,14 +53,15 @@ const PostCommentSection = React.memo(({ postId }: PostCommentSectionProps) => {
 
   const handleAddComment = async () => {
     if (!text.trim()) return;
+  
     try {
       const result = await dispatch(addCommentThunk({ postId, text }) as any);
       if (addCommentThunk.fulfilled.match(result)) {
         const addedComment = result.payload;
-
+  
         // Yorumu diğer kullanıcılara gönder
         socket.emit("new_comment", { postId, comment: addedComment });
-
+  
         setText("");
         toast({ title: "Yorum eklendi", status: "success", duration: 2000 });
       } else {
@@ -83,6 +84,18 @@ const PostCommentSection = React.memo(({ postId }: PostCommentSectionProps) => {
       toast({ title: "Yorum silinemedi", status: "error", duration: 2000 });
     }
   };
+
+  function highlightMentions(text: string) {
+    return text.split(/(@\w+)/g).map((part, i) =>
+      part.startsWith("@") ? (
+        <span key={i} style={{ color: "blue", fontWeight: "bold" }}>
+          {part}
+        </span>
+      ) : (
+        part
+      )
+    );
+  }
 
   return (
     <Box mt={8} p={4} bg="gray.50" borderRadius="md" boxShadow="sm">
@@ -118,7 +131,7 @@ const PostCommentSection = React.memo(({ postId }: PostCommentSectionProps) => {
                 <Box>
                   <Text fontWeight="medium">{comment.author?.name || "Anonim"}</Text>
                   <Text fontSize="sm" color="gray.500">{new Date(comment.createdAt).toLocaleString()}</Text>
-                  <Text mt={2} style={{ wordBreak: 'break-word', overflowWrap: 'break-word', whiteSpace: 'pre-line' }}>{comment.text}</Text>
+                  <Text mt={2} style={{ wordBreak: 'break-word', overflowWrap: 'break-word', whiteSpace: 'pre-line' }}>{highlightMentions(comment.text)}</Text>
                   <Reactions commentId={comment.id} userId={currentUser.userId!} />
                 </Box>
                 {(userRole === "admin" || userEmail === comment.author?.email) && (

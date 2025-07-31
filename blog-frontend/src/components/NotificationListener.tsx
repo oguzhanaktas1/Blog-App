@@ -6,20 +6,21 @@ const NotificationListener = () => {
   const toast = useToast();
 
   useEffect(() => {
-    const handleNotification = (message: string) => {
+    // Mention event handler
+    const handleMention = (data: { message: string; postId: number }) => {
       toast({
-        title: "Yeni Bildirim",
-        description: message,
+        title: "Mentioned!",
+        description: data.message,
         status: "info",
-        duration: 4000,
+        duration: 5000,
         isClosable: true,
       });
     };
 
-    socket.on("receive_notification", handleNotification);
+    socket.on("mention", handleMention);
 
     return () => {
-      socket.off("receive_notification", handleNotification); // cleanup
+      socket.off("mention", handleMention); // cleanup
     };
   }, [toast]);
 

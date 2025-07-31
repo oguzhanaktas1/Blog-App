@@ -19,6 +19,7 @@ import { useNavigate } from "react-router-dom";
 interface User {
   id: number;
   name: string;
+  username: string;
   email: string;
   role: string;
 }
@@ -66,6 +67,7 @@ const UsersList = () => {
         <Thead>
           <Tr>
             <Th>Ad</Th>
+            <Th>Username</Th>
             <Th>Email</Th>
             <Th>Rol</Th>
           </Tr>
@@ -82,6 +84,7 @@ const UsersList = () => {
                   {user.name}
                 </Link>
               </Td>
+              <Td>{user.username}</Td>
               <Td>{user.email}</Td>
               <Td>{user.role}</Td>
             </Tr>

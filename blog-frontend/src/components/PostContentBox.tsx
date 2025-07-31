@@ -34,6 +34,7 @@ import { getUserInfo } from "../utils/getUserInfo"; // doğru path ile
 
 interface Author {
   name?: string | null;
+  username?: string | null;
   email?: string | null;
   profilePhoto?: string | null;
 }
@@ -61,6 +62,8 @@ interface PostContentBoxProps {
   showBadge?: boolean;
   headingSize?: string;
   showButton?: boolean;
+  contentLines?: number;
+  showReadMore?: boolean;
 }
 
 const PostContentBox = React.memo(

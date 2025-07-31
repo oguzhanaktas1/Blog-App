@@ -28,6 +28,7 @@ interface UploadResponse {
 interface UserProfile {
   id: number;
   name: string;
+  username: string;
   email: string;
   profilePhoto: string | null;
   role: string;
@@ -169,6 +170,9 @@ const Profile: React.FC = React.memo(() => {
             <Heading size="md" mb={2}>
               {userProfile?.name || userInfo.name}
             </Heading>
+            <Text fontSize="sm" color="gray.500" mb={1}>
+              {userProfile?.username || userInfo.username}
+            </Text>
             <Text fontSize="sm" color="gray.500" mb={1}>
               {userProfile?.email || userInfo.email}
             </Text>

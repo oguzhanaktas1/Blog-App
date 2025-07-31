@@ -29,6 +29,7 @@ interface Comment {
 interface User {
   id: number;
   name: string;
+  username: string;
   email: string;
   role: string;
   posts: Post[];
@@ -72,6 +73,7 @@ const UserDetail = () => {
         Geri Dön
       </Button>
       <Heading mb={4}>{user.name} - Detaylar</Heading>
+      <Text><b>Username:</b> {user.username}</Text>
       <Text><b>Email:</b> {user.email}</Text>
       <Text><b>Rol:</b> {user.role}</Text>
 

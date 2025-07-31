@@ -41,6 +41,7 @@ export const getProfile = async (req: any, res: Response, next: NextFunction): P
       select: {
         id: true,
         name: true,
+        username: true,
         email: true,
         profilePhoto: true,
         role: true,

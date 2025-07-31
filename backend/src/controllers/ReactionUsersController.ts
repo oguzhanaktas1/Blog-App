@@ -25,7 +25,7 @@ export const getReactionUsers = async (req: Request, res: Response): Promise<voi
       },
     });
 
-    const users = reactions.map((r) => r.user);
+    const users = reactions.map((r: { user: any; }) => r.user);
 
     res.status(200).json({ users });
   } catch (err) {

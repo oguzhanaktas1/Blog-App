@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState } from "react";
 import {
   Box,
@@ -21,11 +22,13 @@ import { useNavigate, Link as RouterLink } from "react-router-dom";
 import { ViewIcon, ViewOffIcon } from "@chakra-ui/icons";
 
 export default function SignupPage() {
-  const [form, setForm] = useState({ name: "", email: "", password: "" });
+  const [form, setForm] = useState({ name: "", username: "", email: "", password: "" });
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [emailTouched, setEmailTouched] = useState(false);
+  const [usernameTouched, setUsernameTouched] = useState(false);
   const emailValid = /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(form.email);
+  const usernameValid = form.username.trim().length >= 3; // en az 3 karakter olsun diye
   const navigate = useNavigate();
   const toast = useToast();
 
@@ -34,6 +37,18 @@ export default function SignupPage() {
   };
 
   const handleSubmit = async () => {
+    if (!usernameValid) {
+      setUsernameTouched(true);
+      toast({
+        title: "Geçersiz Kullanıcı Adı",
+        description: "Kullanıcı adı en az 3 karakter olmalıdır.",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+
     if (!emailValid) {
       setEmailTouched(true);
       return;
@@ -63,7 +78,6 @@ export default function SignupPage() {
         isClosable: true,
       });
       navigate("/login");
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       const errorMessage =
         err.response?.data?.message === "Email already exists"
@@ -82,7 +96,6 @@ export default function SignupPage() {
     }
   };
   
-
   const toggleShowPassword = () => setShowPassword((show) => !show);
 
   return (
@@ -122,73 +135,92 @@ export default function SignupPage() {
               handleSubmit();
             }}
           >
-          <VStack spacing={4}>
+            <VStack spacing={4}>
               <FormControl id="name" isRequired>
                 <FormLabel>Adınız Soyadınız</FormLabel>
-            <Input
-              placeholder="Adınız Soyadınız"
-              name="name"
-              value={form.name}
-              onChange={handleChange}
-              size="lg"
-              variant="filled"
-              _focus={{ borderColor: "teal.500", boxShadow: "0 0 0 1px teal.500" }}
-            />
+                <Input
+                  placeholder="Adınız Soyadınız"
+                  name="name"
+                  value={form.name}
+                  onChange={handleChange}
+                  size="lg"
+                  variant="filled"
+                  _focus={{ borderColor: "teal.500", boxShadow: "0 0 0 1px teal.500" }}
+                />
               </FormControl>
+
+              <FormControl id="username" isRequired isInvalid={usernameTouched && !usernameValid}>
+                <FormLabel>Kullanıcı Adı</FormLabel>
+                <Input
+                  placeholder="Kullanıcı Adı"
+                  name="username"
+                  value={form.username}
+                  onChange={handleChange}
+                  onBlur={() => setUsernameTouched(true)}
+                  size="lg"
+                  variant="filled"
+                  _focus={{ borderColor: "teal.500", boxShadow: "0 0 0 1px teal.500" }}
+                  autoComplete="username"
+                />
+                <FormErrorMessage>Kullanıcı adı en az 3 karakter olmalıdır.</FormErrorMessage>
+              </FormControl>
+
               <FormControl id="email" isRequired isInvalid={emailTouched && !emailValid}>
                 <FormLabel>E-posta Adresiniz</FormLabel>
-            <Input
-              placeholder="E-posta Adresiniz"
-              name="email"
-              type="email"
-              value={form.email}
-              onChange={handleChange}
+                <Input
+                  placeholder="E-posta Adresiniz"
+                  name="email"
+                  type="email"
+                  value={form.email}
+                  onChange={handleChange}
                   onBlur={() => setEmailTouched(true)}
-              size="lg"
-              variant="filled"
-              _focus={{ borderColor: "teal.500", boxShadow: "0 0 0 1px teal.500" }}
-                  autoComplete="username"
+                  size="lg"
+                  variant="filled"
+                  _focus={{ borderColor: "teal.500", boxShadow: "0 0 0 1px teal.500" }}
+                  autoComplete="email"
                   pattern="^[^@\s]+@[^@\s]+\.[^@\s]+$"
                 />
                 <FormErrorMessage>Lütfen geçerli bir e-posta adresi girin.</FormErrorMessage>
               </FormControl>
+
               <FormControl id="password" isRequired>
                 <FormLabel>Şifreniz</FormLabel>
-            <InputGroup size="lg" variant="filled" w="100%">
-              <Input
-                placeholder="Şifreniz"
-                name="password"
-                type={showPassword ? "text" : "password"}
-                value={form.password}
-                onChange={handleChange}
-                _focus={{ borderColor: "teal.500", boxShadow: "0 0 0 1px teal.500" }}
+                <InputGroup size="lg" variant="filled" w="100%">
+                  <Input
+                    placeholder="Şifreniz"
+                    name="password"
+                    type={showPassword ? "text" : "password"}
+                    value={form.password}
+                    onChange={handleChange}
+                    _focus={{ borderColor: "teal.500", boxShadow: "0 0 0 1px teal.500" }}
                     autoComplete="new-password"
-              />
-              <InputRightElement>
-                <IconButton
-                  aria-label={showPassword ? "Şifreyi gizle" : "Şifreyi göster"}
+                  />
+                  <InputRightElement>
+                    <IconButton
+                      aria-label={showPassword ? "Şifreyi gizle" : "Şifreyi göster"}
                       icon={showPassword ? <ViewIcon /> : <ViewOffIcon />}
-                  onClick={toggleShowPassword}
-                  variant="ghost"
-                  size="sm"
-                  _hover={{ bg: "transparent" }}
-                  _active={{ bg: "transparent" }}
-                />
-              </InputRightElement>
-            </InputGroup>
+                      onClick={toggleShowPassword}
+                      variant="ghost"
+                      size="sm"
+                      _hover={{ bg: "transparent" }}
+                      _active={{ bg: "transparent" }}
+                    />
+                  </InputRightElement>
+                </InputGroup>
               </FormControl>
-            <Button
-              colorScheme="teal"
-              size="lg"
-              width="full"
+
+              <Button
+                colorScheme="teal"
+                size="lg"
+                width="full"
                 type="submit"
-              isLoading={isLoading}
-              _hover={{ bg: "teal.500" }}
-              _active={{ bg: "teal.600" }}
-            >
-              Kayıt Ol
-            </Button>
-          </VStack>
+                isLoading={isLoading}
+                _hover={{ bg: "teal.500" }}
+                _active={{ bg: "teal.600" }}
+              >
+                Kayıt Ol
+              </Button>
+            </VStack>
           </form>
           <Text mt={6} color="gray.600" fontSize="sm">
             Zaten hesabınız var mı?{" "}
