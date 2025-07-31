@@ -12,6 +12,7 @@ import type { ErrorRequestHandler } from "express";
 import postReactionsRoutes from "./routes/postReactionsRoutes";
 import commentReactionsRoutes from "./routes/commentReactionsRoutes";
 import notificationRoutes from './routes/notifications';
+import searchRouter from './routes/searchPostTitle';
 
 const app = express();
 
@@ -34,6 +35,7 @@ app.use("/api/ai", aiRoutes);
 app.use("/api/post-reactions", postReactionsRoutes);
 app.use("/api/comment-reactions", commentReactionsRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/posts/search', searchRouter);
 app.use(errorHandler as ErrorRequestHandler);
 
 export default app;

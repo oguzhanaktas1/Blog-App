@@ -30,26 +30,8 @@ import { useNavigate } from "react-router-dom";
 import Reactions from "./Reactions";
 import { getUserInfo } from "../utils/getUserInfo";
 import PostMenu from "./PostMenu";
-
-interface Author {
-  name?: string | null;
-  username?: string | null;
-  email?: string | null;
-  profilePhoto?: string | null;
-}
-
-export interface PostContentBoxPost {
-  id: number;
-  title: string;
-  content: string;
-  createdAt: string;
-  author?: Author;
-  authorId?: number;
-  images?: {
-    id: number;
-    url: string;
-  }[];
-}
+import type { PostContentBoxPost } from '../types/post'; // Adjust Author import if needed
+ // Adjust Author import if needed
 
 // PostContentBoxProps arayüzünü BoxProps ile genişletiyoruz
 interface PostContentBoxProps extends BoxProps {

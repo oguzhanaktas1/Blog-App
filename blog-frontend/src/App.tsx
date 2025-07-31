@@ -17,6 +17,7 @@ import NotificationListener from "./components/NotificationListener";
 import SocketMentionHandler from "./components/SocketMentionHandler";
 import NotificationsPage from "./pages/NotificationsPage";
 import SocketNotificationHandler from "./components/SocketNotificationHandler";
+import SearchResultsPage from './pages/SearchResultsPage';
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(() => {
@@ -61,6 +62,7 @@ function App() {
           <Route path="/posts/:id" element={<PostDetail />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/notifications" element={<NotificationsPage />} />
+          <Route path="/search" element={<SearchResultsPage />} />
           {/* 404 fallback route */}
           <Route path="*" element={<NotFoundPage />} />
         </Routes>
