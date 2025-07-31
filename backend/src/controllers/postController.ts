@@ -58,13 +58,11 @@ export const getPostById = async (
   }
 };
 
-
 export const createPost = async (
   req: AuthRequest,
   res: Response,
   next: NextFunction
 ) => {
-  // artık req.userId'yi tanıyor olacak TS
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     return next({ status: 400, message: "Validation error", errors: errors.array() });
@@ -103,16 +101,13 @@ export const updatePost = async (
       return next({ status: 403, message: "Yetkisiz işlem" });
     }
 
-    // Eğer yeni bir fotoğraf yüklenmişse (req.file varsa), eski fotoğrafı sil ve yenisini ekle
     if (req.file) {
-      // Eski fotoğrafları sil
       for (const img of post.images) {
         if (img.url && fs.existsSync(`.${img.url}`)) {
           fs.unlinkSync(`.${img.url}`);
         }
         await prisma.image.delete({ where: { id: img.id } });
       }
-      // Yeni fotoğrafı kaydet
       const imageUrl = `/uploads/${req.file.filename}`;
       await prisma.image.create({ data: { url: imageUrl, postId: id, userId: req.userId } });
     }
@@ -146,7 +141,6 @@ export const deletePost = async (
       return next({ status: 403, message: "Yetkisiz işlem" });
     }
 
-    // Önce ilgili fotoğrafları sil (hem DB'den hem dosya sisteminden)
     for (const img of post.images) {
       if (img.url && fs.existsSync(`.${img.url}`)) {
         fs.unlinkSync(`.${img.url}`);
@@ -154,13 +148,10 @@ export const deletePost = async (
       await prisma.image.delete({ where: { id: img.id } });
     }
 
-    // Önce ilgili like'ları sil
     await prisma.like.deleteMany({ where: { postId: id } });
 
-    // Önce ilgili yorumları sil
     await prisma.comment.deleteMany({ where: { postId: id } });
 
-    // Sonra postu sil
     await prisma.post.delete({ where: { id } });
     res.status(204).send();
   } catch (error) {
@@ -183,7 +174,6 @@ export const likePost = async (
       return next({ status: 401, message: "Giriş yapmalısınız" });
     }
 
-    // Kullanıcı daha önce like'ladıysa tekrar kaydetme
     const existing = await prisma.like.findUnique({
       where: {
         userId_postId: {
@@ -198,7 +188,6 @@ export const likePost = async (
       return;
     }
 
-    // Like kaydı oluştur
     await prisma.like.create({
       data: {
         userId,
@@ -214,17 +203,16 @@ export const likePost = async (
       },
     });
 
-    // Kendi postunu like'lıyorsa bildirim gönderme
     if (post && post.authorId !== userId) {
-      // İsteğe bağlı olarak kullanıcı adını almak için:
       const liker = await prisma.user.findUnique({
         where: { id: userId },
         select: { name: true },
       });
 
       const likerName = liker?.name || "Bir kullanıcı";
+      const message = `${likerName} gönderinizi beğendi.`;
 
-      notifyUser(post.authorId.toString(), `${likerName} gönderinizi beğendi.`);
+      await notifyUser(post.authorId, message, { postId: postId, type: "post_like", senderId: userId });
 
     }
 
@@ -239,7 +227,32 @@ export const unlikePost = async (req: AuthRequest, res: Response, next: NextFunc
     const postId = Number(req.params.id);
     const userId = req.userId;
     if (!userId) { return next({ status: 401, message: "Giriş yapmalısınız" }); }
-    await prisma.like.deleteMany({ where: { userId, postId } });
+
+    const deleted = await prisma.like.deleteMany({ where: { userId, postId } });
+
+    if (deleted.count > 0) {
+      // Post sahibine beğeni kaldırıldığını bildir
+      const post = await prisma.post.findUnique({
+        where: { id: postId },
+        select: {
+          authorId: true,
+        },
+      });
+
+      if (post && post.authorId !== userId) {
+        const unliker = await prisma.user.findUnique({
+          where: { id: userId },
+          select: { name: true },
+        });
+
+        const unlikerName = unliker?.name || "Bir kullanıcı";
+        const message = `${unlikerName} gönderinizdeki beğenisini geri çekti.`;
+
+        // notifyUser fonksiyonunu hem veritabanı hem de socket bildirimi için kullan
+        await notifyUser(post.authorId, message, { postId: postId, type: "post_unlike", senderId: userId });
+      }
+    }
+
     res.status(200).json({ liked: false });
     return;
   } catch (err) {
@@ -316,7 +329,6 @@ export const deletePostImage = async (req: AuthRequest, res: Response, next: Nex
     if (!image) {
       return next({ status: 404, message: "Image not found" });
     }
-    // Dosyayı sil
     try {
       if (image.url && fs.existsSync(`.${image.url}`)) {
         fs.unlinkSync(`.${image.url}`);

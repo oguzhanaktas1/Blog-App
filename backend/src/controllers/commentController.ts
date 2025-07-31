@@ -3,6 +3,7 @@ import { prisma } from "../prisma/client";
 import type { AuthRequest } from "../middlewares/authMiddleware";
 import { extractMentions } from "../utils/mentionParser";
 import { connectedUsers, io, onlineUsers } from "../socket";
+import { notifyUser } from "../utils/notifyUser"; // notifyUser fonksiyonunu içe aktar
 
 export const getCommentsByPost = async (
   req: Request,
@@ -87,6 +88,7 @@ export const addComment = async (
         },
       },
     });
+
     console.log(
       "addComment userId:",
       req.userId,
@@ -95,6 +97,7 @@ export const addComment = async (
       "username:",
       newComment.author.username
     );
+
     // Mention işlemleri
     const mentionedUsernames = extractMentions(text);
     console.log("Mentions found:", mentionedUsernames);
@@ -109,47 +112,58 @@ export const addComment = async (
     });
 
     type MentionedUser = (typeof mentionedUsers)[number];
-    mentionedUsers.forEach((mentionedUser: MentionedUser) => {
-      const socketSet = connectedUsers.get(String(mentionedUser.id));
-      if (socketSet) {
-        for (const socketId of socketSet) {
-          io.to(socketId).emit("mention", {
-            message: `@${mentionedUser.username}, you were mentioned by user ${newComment.author.username}`, // <--- CHANGE IS HERE
-            postId,
-            commentText: text,
-          });
-        }
-      }
-    });
 
-    if (!newComment.post || !newComment.author) {
-      return next({ status: 500, message: "Yorum ilişkileri eksik" });
+    // **Mentionlanan kullanıcılara bildirim gönder**
+    for (const mentionedUser of mentionedUsers) {
+      // Yorumu yapan kişi, mentionladığı kişiyi kendisi ise bildirim gönderme
+      if (mentionedUser.id === userId) {
+        continue;
+      }
+
+      const mentionNotificationMessage = `@${newComment.author.username} gönderinizdeki bir yorumda sizden bahsetti: "${text.substring(0, 50)}..."`; // Yorumun ilk 50 karakteri
+
+      // Veritabanına kalıcı bildirim kaydet
+      await notifyUser(
+        mentionedUser.id,
+        mentionNotificationMessage,
+        {
+          postId: postId,
+          commentId: newComment.id,
+          type: "mention", // Bildirim tipi: mention
+          senderId: userId, // Yorumu yapan kullanıcı
+        }
+      );
+
+      // Socket.io üzerinden anlık bildirim gönder (zaten vardı, mesajı güncelledik)
+      // connectedUsers yerine onlineUsers kullanılıyor, bu daha doğru
+      const mentionedUserSocketId = onlineUsers.get(String(mentionedUser.id));
+      if (mentionedUserSocketId) {
+        io.to(mentionedUserSocketId).emit("newNotification", { // 'mention' yerine 'newNotification' kullanılması daha tutarlı
+          message: mentionNotificationMessage,
+          postId: postId,
+          commentId: newComment.id,
+          type: "mention",
+          senderId: userId,
+        });
+      }
     }
 
+    // Post sahibine yorum yapıldığında bildirim gönder (mevcut mantık)
     const postOwnerId = newComment.post.authorId;
 
     if (postOwnerId !== userId) {
-      await prisma.notification.create({
-        data: {
-          type: "comment",
-          message: `${newComment.author.name} gönderine yorum yaptı.`,
-          postId: newComment.post.id,
-          commentId: newComment.id,
-          receiverId: postOwnerId,
-          senderId: userId,
-          read: false,
-        },
-      });
+      const commentNotificationMessage = `${newComment.author.name} gönderine yorum yaptı.`;
 
-      const socketId = onlineUsers.get(String(postOwnerId));
-      if (socketId) {
-        io.to(socketId).emit("newNotification", {
-          message: `${newComment.author.name} gönderine yorum yaptı.`,
+      await notifyUser(
+        postOwnerId,
+        commentNotificationMessage,
+        {
           postId: newComment.post.id,
           commentId: newComment.id,
-          type: "comment",
-        });
-      }
+          type: "comment", // Bildirim tipi: comment
+          senderId: userId, // Yorumu yapan kullanıcı
+        }
+      );
     }
 
     res.status(201).json({
