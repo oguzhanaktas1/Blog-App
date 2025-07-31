@@ -15,12 +15,12 @@ import {
   Input,
   InputGroup,
   InputLeftElement,
-  InputRightElement, // Yeni: Sağ tarafa eleman eklemek için
+  InputRightElement,
   VStack,
   useOutsideClick,
   Spinner,
   useColorModeValue,
-  IconButton, // Yeni: Buton ikon için
+  IconButton,
 } from "@chakra-ui/react";
 import { SearchIcon } from "@chakra-ui/icons";
 import { Link, useNavigate } from "react-router-dom";
@@ -32,13 +32,18 @@ import axios from "axios";
 import socket from "../utils/socket";
 import { useSelector } from "react-redux";
 import type { RootState } from "../store/index";
-import type { PostContentBoxPost } from '../types/post';
+
+// Navbar'daki arama sonuçları için basitleştirilmiş arayüz
+interface NavbarSearchPostResult {
+  id: number;
+  title: string;
+  author?: {
+    name?: string | null;
+    username?: string | null;
+  };
+}
 
 import AppLogo from "../assets/react.svg";
-
-// It's better to import this from PostContentBox.tsx if it's exported,
-// or from a shared types file (e.g., src/types/post.ts)
-// For now, keeping it here as per your original code.
 
 interface UserProfile {
   id: number;
@@ -66,6 +71,10 @@ const Navbar = React.memo(function Navbar({
       state.notifications.notifications.filter((n) => !n.isRead).length
   );
 
+  // useRef tanımlamaları doğrudan bileşen gövdesinin en üst seviyesinde olmalı
+  const searchBoxRef = React.useRef<HTMLDivElement>(null);
+  const delayDebounceFnRef = React.useRef<NodeJS.Timeout>(null); // null başlangıç değeri eklendi
+
   const [profilePhotoUrl, setProfilePhotoUrl] = React.useState<string | null>(
     null
   );
@@ -73,17 +82,21 @@ const Navbar = React.memo(function Navbar({
     null
   );
   const [searchQuery, setSearchQuery] = React.useState<string>("");
-  const [searchResults, setSearchResults] = React.useState<PostContentBoxPost[]>([]);
+  const [searchResults, setSearchResults] = React.useState<NavbarSearchPostResult[]>([]);
   const [loadingSearch, setLoadingSearch] = React.useState<boolean>(false);
   const [showSearchResults, setShowSearchResults] = React.useState<boolean>(false);
+  const [showMinCharWarning, setShowMinCharWarning] = React.useState<boolean>(false); // Minimum karakter uyarısı için yeni state
 
-  const searchBoxRef = React.useRef<HTMLDivElement>(null); // Arama sonuçları kutusu için ref
-
+  // Chakra UI teması için renkler (mevcut renk tanımlarına ek olarak)
   const bgResultBox = useColorModeValue("white", "gray.700");
   const hoverBgResultBox = useColorModeValue("gray.100", "gray.600");
   const textColorResultBox = useColorModeValue("gray.800", "white");
   const spinnerColor = useColorModeValue("teal.500", "blue.300");
   const infoTextColor = useColorModeValue("gray.500", "gray.400");
+
+  // Yeni uyarı mesajı renkleri
+  const warningBg = useColorModeValue("white", "gray.800"); // Beyaz arka plan (aydınlık mod) / Koyu gri (karanlık mod)
+  const warningTextColor = useColorModeValue("gray.800", "white"); // Siyah yazı (aydınlık mod) / Beyaz (karanlık mod)
 
 
   React.useEffect(() => {
@@ -126,14 +139,30 @@ const Navbar = React.memo(function Navbar({
     navigate("/");
   }, [setIsLoggedIn, setProfilePhotoUrl, setUserProfile, navigate]);
 
-  // Yeni: Arama sorgusu değiştikçe backend'e istek atma (Debounce ile)
   React.useEffect(() => {
-    if (searchQuery.length > 1) { // En az 2 karakter girildiğinde aramayı başlat
+    // 1 karakter kontrolü
+    if (searchQuery.length === 1) {
+      setShowMinCharWarning(true);
+      setShowSearchResults(false); // Sonuçları gizle
+      setSearchResults([]); // Önceki sonuçları temizle
+      if (delayDebounceFnRef.current) {
+        clearTimeout(delayDebounceFnRef.current); // Önceki debounce'ı iptal et
+      }
+      return; // Daha fazla işlem yapma
+    } else {
+      setShowMinCharWarning(false); // Uyarıyı gizle
+    }
+
+    // 2+ karakter kontrolü ve debounce
+    if (searchQuery.length > 1) {
       setLoadingSearch(true);
-      const delayDebounceFn = setTimeout(async () => {
+      if (delayDebounceFnRef.current) {
+        clearTimeout(delayDebounceFnRef.current); // Önceki debounce'ı iptal et
+      }
+      delayDebounceFnRef.current = setTimeout(async () => {
         try {
           const BACKEND_URL = import.meta.env.VITE_API_BASE_URL;
-          const response = await axios.get<PostContentBoxPost[]>(`${BACKEND_URL}/api/posts/search?q=${encodeURIComponent(searchQuery)}`);
+          const response = await axios.get<NavbarSearchPostResult[]>(`${BACKEND_URL}/api/posts/search?q=${encodeURIComponent(searchQuery)}`);
           setSearchResults(response.data);
           setShowSearchResults(true); // Sonuçlar geldiğinde göster
         } catch (error) {
@@ -143,29 +172,40 @@ const Navbar = React.memo(function Navbar({
           setLoadingSearch(false);
         }
       }, 500); // 500ms bekleme süresi
-
-      return () => clearTimeout(delayDebounceFn); // Component unmount edildiğinde veya query değiştiğinde timeout'u temizle
     } else {
       setSearchResults([]); // Arama sorgusu boşsa sonuçları temizle
       setShowSearchResults(false); // Sonuç kutusunu gizle
     }
+
+    // Component unmount edildiğinde veya query değiştiğinde timeout'u temizle
+    return () => {
+      if (delayDebounceFnRef.current) {
+        clearTimeout(delayDebounceFnRef.current);
+      }
+    };
   }, [searchQuery]);
 
   // Arama kutusunun dışına tıklandığında sonuçları gizle
   useOutsideClick({
     ref: searchBoxRef,
-    handler: () => setShowSearchResults(false),
+    handler: () => {
+      // Dışarı tıklandığında sadece arama sonuçlarını gizle, uyarıyı değil.
+      setShowSearchResults(false);
+    },
   });
 
   // Bu handleSearch fonksiyonu, Enter'a basıldığında veya arama ikonuna basıldığında
   // tam arama sayfası navigasyonu için kullanılacak.
-  const handleSearch = (event?: React.FormEvent) => { // Make event optional
-    event?.preventDefault(); // Prevent default form submission if event exists
-    if (searchQuery.trim()) {
+  const handleSearch = (event?: React.FormEvent) => {
+    event?.preventDefault(); // Varsayılan form gönderimini engelle
+    if (searchQuery.trim().length > 1) { // En az 2 karakter kontrolü
       navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
       setSearchQuery(""); // Arama sayfasına gittikten sonra arama kutusunu temizle
       setSearchResults([]); // Sonuçları temizle
       setShowSearchResults(false); // Sonuçları gizle
+      setShowMinCharWarning(false); // Uyarıyı gizle
+    } else if (searchQuery.trim().length === 1) {
+      setShowMinCharWarning(true); // Eğer 1 karakterse uyarıyı göster
     }
   };
 
@@ -220,7 +260,7 @@ const Navbar = React.memo(function Navbar({
           maxW="400px"
           mx={4}
           as="form"
-          onSubmit={handleSearch} // Form submit olduğunda (Enter'a basıldığında) handleSearch'i çağır
+          onSubmit={handleSearch}
         >
           <InputGroup>
             <InputLeftElement pointerEvents="none">
@@ -238,23 +278,25 @@ const Navbar = React.memo(function Navbar({
               _hover={{ borderColor: "whiteAlpha.600" }}
               _focus={{ borderColor: "whiteAlpha.800", boxShadow: "outline" }}
               onFocus={() => {
-                // Eğer zaten arama sonuçları varsa inputa odaklanınca göster
-                if (searchResults.length > 0) {
+                // Eğer arama sorgusu 1 karakterse uyarıyı göster
+                if (searchQuery.length === 1) {
+                  setShowMinCharWarning(true);
+                  setShowSearchResults(false); // Sonuçları gizle
+                } else if (searchResults.length > 0 && searchQuery.length > 1) { // Eğer sonuçlar varsa ve query > 1 ise göster
                   setShowSearchResults(true);
                 }
               }}
             />
-            {/* Yeni: Arama İkon Butonu */}
             <InputRightElement width="4.5rem">
               <IconButton
                 aria-label="Search"
                 icon={<SearchIcon />}
-                onClick={() => handleSearch()} // İkona tıklandığında handleSearch'i çağır
+                onClick={() => handleSearch()}
                 size="sm"
                 colorScheme="whiteAlpha"
                 variant="ghost"
                 _hover={{ bg: "whiteAlpha.300" }}
-                mr={1} // Sağdan biraz boşluk
+                mr={1}
               />
             </InputRightElement>
           </InputGroup>
@@ -292,6 +334,7 @@ const Navbar = React.memo(function Navbar({
                         setSearchQuery("");
                         setSearchResults([]);
                         setShowSearchResults(false);
+                        setShowMinCharWarning(false); // Uyarıyı da kapat
                       }}
                     >
                       <Text fontWeight="semibold" color={textColorResultBox} noOfLines={1}>
@@ -310,6 +353,31 @@ const Navbar = React.memo(function Navbar({
               )}
             </Box>
           )}
+
+          {/* Minimum Karakter Uyarısı - Güncellenen Stil */}
+          {showMinCharWarning && (
+            <Box
+              position="absolute"
+              top="100%" // Input'un hemen altına konumlandır
+              left="0"
+              right="0"
+              mt={2} // Input ile arasında boşluk
+              px={3} // Yatay dolgu
+              py={2} // Dikey dolgu
+              bg={warningBg} // Arkaplan rengi
+              color={warningTextColor} // Yazı rengi
+              borderRadius="md" // Köşe yuvarlaklığı
+              boxShadow="md" // Hafif gölge
+              zIndex={100} // Diğer elementlerin üzerinde kalması için
+              textAlign="center" // Metni ortala
+              whiteSpace="nowrap" // Metni tek satırda tut
+            >
+              <Text fontWeight="semibold" fontSize="sm">
+                Arama yapmak için en az 2 karakter giriniz.
+              </Text>
+            </Box>
+          )}
+
         </Box>
 
         <Button
