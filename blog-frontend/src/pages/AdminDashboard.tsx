@@ -22,22 +22,21 @@ import {
   Tab,
   TabPanel,
   useToast,
-  Modal, // Modal import et
-  ModalOverlay, // ModalOverlay import et
-  ModalContent, // ModalContent import et
-  ModalHeader, // ModalHeader import et
-  ModalCloseButton, // ModalCloseButton import et
-  ModalBody, // ModalBody import et
-  useDisclosure, // useDisclosure import et
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalCloseButton,
+  ModalBody,
+  useDisclosure,
 } from "@chakra-ui/react";
-import { useEffect, useState, useCallback } from "react"; // useCallback'i de import et
+import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { getUserRole } from "../utils/getUserRole";
 import PostMenu from "../components/PostMenu";
 import api from "../api/axios";
-import UpdatePostForm from "../components/UpdatePostForm"; // UpdatePostForm'u import et
+import UpdatePostForm from "../components/UpdatePostForm";
 
-// Mevcut Interface'ler
 interface User {
   id: number;
   name: string;
@@ -47,14 +46,12 @@ interface User {
   profilePhoto?: string;
 }
 
-// Post interface'ini PostContentBoxPost ile uyumlu hale getiriyoruz
-// Çünkü UpdatePostForm'a PostContentBoxPost tipinde bir post göndereceğiz
 interface Post {
   id: number;
   title: string;
   content: string;
   createdAt: string;
-  images?: { id: number; url: string }[]; // UpdatePostForm için images ekliyoruz
+  images?: { id: number; url: string }[];
   author?: {
     name?: string | null;
     username?: string | null;
@@ -122,7 +119,6 @@ export default function AdminDashboard() {
   const [error, setError] = useState<string | null>(null);
   const toast = useToast();
 
-  // Modal için state ve helper hook'ları
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [editingPost, setEditingPost] = useState<Post | null>(null);
 
@@ -414,9 +410,9 @@ export default function AdminDashboard() {
                               <PostMenu
                                 postId={post.id}
                                 postTitle={post.title}
-                                onEdit={() => handlePostEdit(post)} // Post objesini doğrudan gönderiyoruz
+                                onEdit={() => handlePostEdit(post)} 
                                 onDelete={() => handlePostDelete(post.id)}
-                                canModify={true} // Admin her zaman modify edebilir
+                                canModify={true}
                               />
                             </Box>
                           </Flex>

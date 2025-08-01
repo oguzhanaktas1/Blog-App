@@ -49,7 +49,7 @@ export const deleteNotificationThunk = createAsyncThunk(
   }
 );
 
-// ✅ Yeni: Bildirim oluştur
+// Yeni: Bildirim oluştur
 export const createNotificationThunk = createAsyncThunk(
   "notifications/create",
   async (

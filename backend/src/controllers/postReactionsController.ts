@@ -14,10 +14,9 @@ export const addPostReaction = async (req: AuthRequest, res: Response, next: Nex
       return;
     }
 
-    // Get the post details to find the author
     const post = await prisma.post.findUnique({
       where: { id: postId },
-      include: { author: true }, // Include author to get their ID and name
+      include: { author: true },
     });
 
     if (!post) {
@@ -68,9 +67,7 @@ export const addPostReaction = async (req: AuthRequest, res: Response, next: Nex
       res.status(201).json({ message: "Tepki eklendi.", reaction: newReaction });
     }
 
-    // Send real-time notification to the post owner if they are not the one reacting
     if (post.authorId !== userId) {
-      // Create a persistent notification in the database
       await prisma.notification.create({
         data: {
           type: "reaction",
@@ -82,7 +79,6 @@ export const addPostReaction = async (req: AuthRequest, res: Response, next: Nex
         },
       });
 
-      // Emit a real-time notification via socket if the post owner is online
       const postOwnerSocketId = onlineUsers.get(String(post.authorId));
       if (postOwnerSocketId) {
         io.to(postOwnerSocketId).emit("newNotification", {

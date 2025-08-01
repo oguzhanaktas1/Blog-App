@@ -51,7 +51,7 @@ const UsersList = () => {
 
   useEffect(() => {
     if (getUserRole() !== "admin") {
-      navigate("/"); // ya da yetkisiz sayfası
+      navigate("/");
     }
   }, [navigate]);
 

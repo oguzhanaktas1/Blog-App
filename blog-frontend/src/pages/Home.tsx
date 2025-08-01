@@ -21,7 +21,7 @@ import {
 } from "@chakra-ui/react";
 import { AddIcon } from "@chakra-ui/icons";
 import { useNavigate } from "react-router-dom";
-import NewPostForm from "../components/NewPostForm"; // Yolu doğru olduğundan emin olun
+import NewPostForm from "../components/NewPostForm";
 import { getUserEmail } from "../utils/getUserEmail";
 import { getUserRole } from "../utils/getUserRole";
 import PostCommentSection from "../components/PostCommentSection";
@@ -102,7 +102,7 @@ const Home = React.memo(() => {
           left="0"
           w="100%"
           h="100%"
-          // bgImage="url('/path/to/your/pattern.svg')" // Kendi desen yolunuzu buraya ekleyin
+         
           bgRepeat="repeat"
           opacity="0.1"
           zIndex="0"
@@ -223,8 +223,8 @@ const Home = React.memo(() => {
         <ModalOverlay />
         <ModalContent>
           
-          <ModalBody> {/* ModalBody'nin varsayılan padding'ini kullanabiliriz */}
-            <NewPostForm onClose={onClose} /> {/* onClose prop'unu gönderiyoruz */}
+          <ModalBody>
+            <NewPostForm onClose={onClose} />
           </ModalBody>
         </ModalContent>
       </Modal>

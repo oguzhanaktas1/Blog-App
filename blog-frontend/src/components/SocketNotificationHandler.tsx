@@ -23,7 +23,7 @@ const SocketNotificationHandler = () => {
       // 1. Redux Store'a ekle
       dispatch(addNotificationFromSocket({ content: data.message }));
 
-      // 2. Chakra UI toast bildirimi (tıklanabilir özel bileşen)
+      // toast bildirimi (tıklanabilir özel bileşen)
       toast({
         duration: 5000,
         isClosable: true,

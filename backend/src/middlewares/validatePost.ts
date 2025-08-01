@@ -2,8 +2,8 @@ import Joi from "joi";
 import { Request, Response, NextFunction } from "express";
 
 const postSchema = Joi.object({
-  title: Joi.string().allow("").optional(), // Başlık zorunlu değil
-  content: Joi.string().min(1).required(),   // İçerik zorunlu
+  title: Joi.string().allow("").optional(),
+  content: Joi.string().min(1).required(),
 });
 
 export function validatePost(req: Request, res: Response, next: NextFunction) {

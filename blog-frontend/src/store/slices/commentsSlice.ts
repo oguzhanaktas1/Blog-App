@@ -28,7 +28,7 @@ export const deleteCommentThunk = createAsyncThunk(
 const commentsSlice = createSlice({
   name: "comments",
   initialState: {
-    items: {}, // { [postId]: Comment[] }
+    items: {},
     loading: false,
     error: null,
   } as any,
@@ -39,7 +39,6 @@ const commentsSlice = createSlice({
         state.items[postId] = [];
       }
     
-      // Aynı ID'de yorum varsa ekleme
       const exists = state.items[postId].some((c: Comment) => c.id === comment.id);
       if (!exists) {
         state.items[postId].push(comment);
@@ -54,7 +53,6 @@ const commentsSlice = createSlice({
       })
       .addCase(fetchCommentsThunk.fulfilled, (state, action) => {
         state.loading = false;
-        // action.meta.arg is postId
         state.items[action.meta.arg] = action.payload;
       })
       .addCase(fetchCommentsThunk.rejected, (state, action) => {
@@ -62,14 +60,12 @@ const commentsSlice = createSlice({
         state.error = action.error.message;
       })
       .addCase(addCommentThunk.fulfilled, (state, action) => {
-        // action.payload should be a comment with postId (now always present)
         const payload = action.payload as { id: number; text: string; createdAt: string; postId: number; author?: any };
         const postId = payload.postId;
         if (!state.items[postId]) state.items[postId] = [];
         state.items[postId].push(payload);
       })
       .addCase(deleteCommentThunk.fulfilled, (state, action) => {
-        // action.payload should be commentId
         const commentId = action.payload as number;
         for (const postId in state.items) {
           state.items[postId] = state.items[postId].filter((c: any) => c.id !== commentId);

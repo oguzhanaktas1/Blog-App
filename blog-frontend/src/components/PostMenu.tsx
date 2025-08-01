@@ -12,7 +12,7 @@ import {
   interface PostMenuProps {
     postId: number;
     postTitle: string;
-    onEdit?: () => void; // Bu fonksiyon şimdi PostContentBox'taki onOpen'ı tetikleyecek
+    onEdit?: () => void;
     onDelete?: () => void;
     canModify: boolean;
   }
@@ -41,10 +41,10 @@ import {
             variant="ghost"
             size="sm"
             aria-label="Post options"
-            onClick={(e) => e.stopPropagation()} // Olay kabarcıklanmasını durdur
+            onClick={(e) => e.stopPropagation()}
           />
           <MenuList>
-            {canModify && onEdit && <MenuItem onClick={onEdit}>Güncelle</MenuItem>} {/* onEdit varsa render et */}
+            {canModify && onEdit && <MenuItem onClick={onEdit}>Güncelle</MenuItem>}
             <MenuItem onClick={handleShare}>Paylaş</MenuItem>
             {canModify && onDelete && (
               <MenuItem color="red.500" onClick={onDelete}>

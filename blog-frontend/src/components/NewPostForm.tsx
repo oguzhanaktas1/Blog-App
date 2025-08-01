@@ -1,6 +1,4 @@
 /* eslint-disable react-hooks/rules-of-hooks */
- 
-
 import {
   Box,
   Button,
@@ -21,7 +19,7 @@ import {
   Icon,
   Spinner,
 } from "@chakra-ui/react";
-import { DeleteIcon } from "@chakra-ui/icons"; // DeleteIcon import edildi
+import { DeleteIcon } from "@chakra-ui/icons";
 import { useState, useCallback, useRef, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "../utils/axios";
@@ -255,13 +253,13 @@ const NewPostForm = ({ onClose }: NewPostFormProps) => {
           {!showAIPrompt ? (
             <Button
               onClick={() => setShowAIPrompt(true)}
-              bg="purple.500" // Mor arka plan
-              color="white" // Beyaz metin rengi
+              bg="purple.500"
+              color="white"
               width="full"
               leftIcon={<FaRobot />}
               size="lg"
               mt={2}
-              _hover={{ bg: "purple.600" }} // Hover rengi
+              _hover={{ bg: "purple.600" }}
             >
               Generate Content with AI
             </Button>
@@ -296,7 +294,7 @@ const NewPostForm = ({ onClose }: NewPostFormProps) => {
                   icon={<DeleteIcon fill="red.500" />}
                   aria-label="Cancel AI Generation"
                   size="lg"
-                  _hover={{ bg: "red.600" }} // Hover rengi
+                  _hover={{ bg: "red.600" }}
                 />
               </Flex>
             </Flex>

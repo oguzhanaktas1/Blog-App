@@ -11,18 +11,18 @@ import {
   HStack,
   Spinner,
   useToast,
-  Grid, // Grid layout için
-  GridItem, // Grid sütunları için
-  useColorModeValue, // Tema renkleri için
-  AlertDialog, // Onay diyaloğu için
+  Grid,
+  GridItem,
+  useColorModeValue,
+  AlertDialog,
   AlertDialogBody,
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogContent,
   AlertDialogOverlay,
-  useDisclosure, // Diyalog için hook
+  useDisclosure,
 } from "@chakra-ui/react";
-import axios from "axios"; // axios import edildiğinden emin olun
+import axios from "axios";
 import React from "react";
 
 type Notification = {
@@ -38,7 +38,7 @@ const NotificationsPage = () => {
 
   // "Hepsini Sil" butonu için AlertDialog state'leri
   const { isOpen, onOpen, onClose } = useDisclosure();
-  const cancelRef = React.useRef<HTMLButtonElement>(null); // Buton ref'i
+  const cancelRef = React.useRef<HTMLButtonElement>(null);
 
   const notificationBg = useColorModeValue("white", "gray.700");
   const notificationBorderColor = useColorModeValue("gray.200", "gray.600");
@@ -48,7 +48,7 @@ const NotificationsPage = () => {
     try {
       const token = localStorage.getItem("token");
       const res = await axios.get<Notification[]>(
-        "http://localhost:3000/api/notifications", // Tam API URL'sini buraya ekleyin
+        "http://localhost:3000/api/notifications",
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -69,13 +69,13 @@ const NotificationsPage = () => {
     } finally {
       setLoading(false);
     }
-  }, [toast]); // useCallback içine toast'u bağımlılık olarak ekliyoruz
+  }, [toast]);
 
   const deleteNotification = useCallback(
     async (id: number) => {
       try {
         const token = localStorage.getItem("token");
-        await axios.delete(`http://localhost:3000/api/notifications/${id}`, { // Tam API URL'sini buraya ekleyin
+        await axios.delete(`http://localhost:3000/api/notifications/${id}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         setNotifications((prev) => prev.filter((n) => n.id !== id));
@@ -103,10 +103,10 @@ const NotificationsPage = () => {
   const deleteAllNotifications = useCallback(async () => {
     try {
       const token = localStorage.getItem("token");
-      await axios.delete("http://localhost:3000/api/notifications", { // Tüm bildirimleri silme API'si
+      await axios.delete("http://localhost:3000/api/notifications", {
         headers: { Authorization: `Bearer ${token}` },
       });
-      setNotifications([]); // Tüm bildirimleri sıfırla
+      setNotifications([]); 
       toast({
         title: "Başarılı",
         description: "Tüm bildirimler silindi.",
@@ -114,7 +114,7 @@ const NotificationsPage = () => {
         duration: 2000,
         isClosable: true,
       });
-      onClose(); // AlertDialog'u kapat
+      onClose();
     } catch (err: any) {
       toast({
         title: "Silinemedi",
@@ -130,12 +130,12 @@ const NotificationsPage = () => {
 
   useEffect(() => {
     fetchNotifications();
-  }, [fetchNotifications]); // fetchNotifications useCallback olduğu için buraya ekliyoruz
+  }, [fetchNotifications]);
 
   return (
     <Box minH="100vh" minW="100vw" p={6} bg={useColorModeValue("gray.50", "gray.900")}>
       <Grid
-        templateColumns={{ base: "1fr", md: "1fr 2fr 1fr" }} // Küçük ekranlarda tek sütun, orta ve büyük ekranlarda 3 sütun
+        templateColumns={{ base: "1fr", md: "1fr 2fr 1fr" }}
         gap={8}
         maxW="container.xl" // Genişliği sınırla
         mx="auto" // Ortala

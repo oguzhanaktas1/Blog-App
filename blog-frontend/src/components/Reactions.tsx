@@ -89,7 +89,6 @@ const Reactions = ({ postId, commentId, userId }: ReactionProps) => {
     }
   };
 
-  // Comment reaction fetch
   const fetchCommentReactions = async () => {
     if (!commentId) return;
     try {

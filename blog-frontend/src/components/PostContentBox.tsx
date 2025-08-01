@@ -17,8 +17,6 @@ import {
   Button,
   Avatar,
   useDisclosure,
-  // Yeni eklenenler: BoxProps'ı içe aktarıyoruz
-  // Yeni eklenenler: BoxProps'ı içe aktarıyoruz
   type BoxProps,
 } from "@chakra-ui/react";
 import type { ReactNode } from "react";
@@ -30,10 +28,8 @@ import { useNavigate } from "react-router-dom";
 import Reactions from "./Reactions";
 import { getUserInfo } from "../utils/getUserInfo";
 import PostMenu from "./PostMenu";
-import type { PostContentBoxPost } from '../types/post'; // Adjust Author import if needed
- // Adjust Author import if needed
+import type { PostContentBoxPost } from '../types/post';
 
-// PostContentBoxProps arayüzünü BoxProps ile genişletiyoruz
 interface PostContentBoxProps extends BoxProps {
   post: PostContentBoxPost;
   userEmail?: string | null;
@@ -46,9 +42,6 @@ interface PostContentBoxProps extends BoxProps {
   showButton?: boolean;
   showReadMoreButton?: boolean;
   displayFullContent?: boolean;
-  // `contentLines` prop'u kaldırıldı çünkü `noOfLines` Chakra UI'ın kendi prop'u.
-  // Bu durumda `contentLines` diye özel bir prop'a gerek kalmıyor.
-  // Eğer özel bir mantıkla satır sayısını kısıtlamak isteseydiniz burada tanımlardınız.
 }
 
 const PostContentBox = React.memo(
@@ -64,8 +57,8 @@ const PostContentBox = React.memo(
     showButton = true,
     showReadMoreButton = true,
     displayFullContent = false,
-    // ...rest operatörü ile kalan tüm prop'ları yakalıyoruz
-    ...rest // `BoxProps` içindeki tüm stil prop'ları buraya gelir (p, borderRadius, boxShadow, _hover, transition vb.)
+    
+    ...rest
   }: PostContentBoxProps) => {
     const bg = useColorModeValue("white", "gray.800");
     const boxShadow = useColorModeValue("md", "dark-lg");

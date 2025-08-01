@@ -1,7 +1,6 @@
 import { Request, Response } from "express";
 import { prisma } from "../prisma/client";
 
-// GET /api/reactions/users?reaction=like&postId=1  veya &commentId=5
 export const getReactionUsers = async (req: Request, res: Response): Promise<void> => {
   const { reaction, postId, commentId } = req.query;
 

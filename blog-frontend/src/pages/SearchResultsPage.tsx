@@ -1,5 +1,3 @@
- 
-// src/pages/SearchResultsPage.tsx
 import React, { useState, useEffect } from 'react';
 import { useLocation, useSearchParams, Link as RouterLink } from 'react-router-dom';
 import axios from 'axios';
@@ -19,16 +17,13 @@ import {
   useColorModeValue,
   Grid,
   GridItem,
-  Button, // Link bileşenini import ediyoruz (eğer dış link veya stil için kullanacaksanız)
+  Button,
 } from '@chakra-ui/react';
 
-// Backend'den gelecek verinin yapısı (SearchController.ts'deki ile aynı olmalı)
-// Burada tekrar tanımlıyoruz çünkü doğrudan backend dosyasından import edemiyoruz.
 interface SearchPostResult {
   id: number;
   title: string;
-  createdAt: string; // Backend'den JSON olarak geldiğinde string olur
-  // content: string; // Artık burada content'e ihtiyacımız yok
+  createdAt: string;
   author?: {
     id: number;
     name?: string | null;
@@ -38,8 +33,6 @@ interface SearchPostResult {
   };
 }
 
-// PostContentBox bileşeninin beklediği veri yapısı
-// (PostContentBoxPost'a artık content geçirmeyeceğiz, bu arayüzü PostContentBox'tan bağımsız olarak düşünebiliriz.)
 interface DisplayPostResult {
   id: number;
   title: string;
@@ -62,7 +55,6 @@ const SearchResultsPage: React.FC = () => {
 
   const query = searchParams.get('q');
 
-  // Chakra UI teması için renkler
   const bgColor = useColorModeValue('gray.50', 'gray.800');
   const cardBg = useColorModeValue('white', 'gray.700');
   const textColor = useColorModeValue('gray.700', 'gray.200');
@@ -82,8 +74,6 @@ const SearchResultsPage: React.FC = () => {
       setError(null);
       try {
         const BACKEND_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
-        // Backend'den content almamıza gerek kalmadığı için,
-        // SearchController'daki select kısmından content'i çıkarabilirsiniz.
         const response = await axios.get<SearchPostResult[]>(`${BACKEND_URL}/api/posts/search?q=${encodeURIComponent(query)}`);
 
         const formattedResults: DisplayPostResult[] = response.data.map(post => ({
@@ -182,11 +172,11 @@ const SearchResultsPage: React.FC = () => {
                         size="md"
                         color={titleColor}
                         _hover={{ textDecoration: 'underline', color: 'teal.500' }}
-                        flexGrow={1} // Başlığın mümkün olduğunca yer kaplamasını sağla
+                        flexGrow={1}
                       >
                         {post.title}
                       </Heading>
-                      <Spacer /> {/* Başlığı ve butonu ayırır */}
+                      <Spacer />
                       {/* Posta Git Butonu */}
                       <Button
                         as={RouterLink}
@@ -215,7 +205,7 @@ const SearchResultsPage: React.FC = () => {
                           @{post.author.username}
                         </Tag>
                       )}
-                      <Spacer /> {/* Tarihi sağa yaslar */}
+                      <Spacer />
                       <Text>{post.createdAt}</Text>
                     </HStack>
                   </VStack>

@@ -12,13 +12,13 @@ export interface Post {
   title: string;
   content: string;
   authorId: number;
-  author?: User;  // Eğer backend'den geliyorsa, opsiyonel olarak ekle
+  author?: User;
   createdAt: string;
   images?: { id: number; url: string }[];
 }
 
 export const getPosts = async (): Promise<Post[]> => {
-  const res = await axios.get<Post[]>('/posts');  // Generic tip verildi
+  const res = await axios.get<Post[]>('/posts');
   return res.data;
 };
 

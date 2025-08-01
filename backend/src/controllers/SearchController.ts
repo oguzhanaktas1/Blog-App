@@ -6,24 +6,17 @@ import { prisma } from "../prisma/client";
 export interface SearchPostResult {
     id: number;
     title: string;
-    createdAt: Date; // Prisma Date objesi döner
-    // *** BURAYI EKLEDIK: content alanını search sonuçlarına dahil ediyoruz ***
-    content: string; // PostContentBoxPost'un beklediği content alanı
+    createdAt: Date;
+    content: string;
     author?: {
         id: number;
-        name?: string | null; // PostContentBoxPost'un author.name beklediği için ekledik
+        name?: string | null;
         username?: string | null;
-        email: string; // PostContentBoxPost'un author.email beklediği için ekledik
+        email: string;
         profilePhoto?: string | null;
     };
-    // readTime backend'de yoksa buraya eklemeyin, frontend'de opsiyonel kalsın.
 }
 
-/**
- * Dinamik post başlığı arama işlemini yönetir.
- * @param req Express isteği (query parametresi olarak 'q' içerir)
- * @param res Express yanıtı (SearchPostResult[] döner)
- */
 export const searchPostsByTitle = async (
     req: Request,
     res: Response<SearchPostResult[]>
@@ -46,13 +39,13 @@ export const searchPostsByTitle = async (
                 id: true,
                 title: true,
                 createdAt: true,
-                content: true, // <--- BURAYI EKLEDIK: content'i de seçiyoruz
+                content: true,
                 author: {
                     select: {
                         id: true,
-                        name: true, // <--- BURAYI EKLEDIK: author name'i de seçiyoruz
+                        name: true,
                         username: true,
-                        email: true, // <--- BURAYI EKLEDIK: author email'i de seçiyoruz
+                        email: true,
                         profilePhoto: true,
                     },
                 },
@@ -60,8 +53,6 @@ export const searchPostsByTitle = async (
             take: 10,
         });
 
-        // Backend'de Date objesi döner. JSON'a serialize edilirken stringe dönüşür.
-        // Frontend'de bu string'i Date objesine parse edip kullanmalısınız.
         res.json(posts as SearchPostResult[]);
     } catch (error) {
         console.error('Post arama hatası:', error);

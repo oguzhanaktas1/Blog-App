@@ -23,17 +23,16 @@ async function main() {
             username: admin.username,
             email: admin.email,
             password: hashedPassword,
-            role: "admin", // Kullanıcı modeli role içeriyor olmalı
+            role: "admin",
           },
         });
-        console.log(`✅ Admin '${admin.email}' created.`);
+        console.log(`Admin '${admin.email}' created.`);
       } else {
-        console.log(`ℹ️ Admin '${admin.email}' already exists. Skipping.`);
+        console.log(`Admin '${admin.email}' already exists. Skipping.`);
       }
     }
   } catch (error: any) {
-    // Error handler style: print error and exit with non-zero code
-    console.error("[Admin Creation Error]", error.message || error);
+    console.error("Admin Creation Error", error.message || error);
     process.exit(1);
   } finally {
     await prisma.$disconnect();

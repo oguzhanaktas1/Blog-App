@@ -33,7 +33,6 @@ import socket from "../utils/socket";
 import { useSelector } from "react-redux";
 import type { RootState } from "../store/index";
 
-// Navbar'daki arama sonuçları için basitleştirilmiş arayüz
 interface NavbarSearchPostResult {
   id: number;
   title: string;
@@ -71,9 +70,8 @@ const Navbar = React.memo(function Navbar({
       state.notifications.notifications.filter((n) => !n.isRead).length
   );
 
-  // useRef tanımlamaları doğrudan bileşen gövdesinin en üst seviyesinde olmalı
   const searchBoxRef = React.useRef<HTMLDivElement>(null);
-  const delayDebounceFnRef = React.useRef<NodeJS.Timeout>(null); // null başlangıç değeri eklendi
+  const delayDebounceFnRef = React.useRef<NodeJS.Timeout>(null);
 
   const [profilePhotoUrl, setProfilePhotoUrl] = React.useState<string | null>(
     null
@@ -85,18 +83,16 @@ const Navbar = React.memo(function Navbar({
   const [searchResults, setSearchResults] = React.useState<NavbarSearchPostResult[]>([]);
   const [loadingSearch, setLoadingSearch] = React.useState<boolean>(false);
   const [showSearchResults, setShowSearchResults] = React.useState<boolean>(false);
-  const [showMinCharWarning, setShowMinCharWarning] = React.useState<boolean>(false); // Minimum karakter uyarısı için yeni state
+  const [showMinCharWarning, setShowMinCharWarning] = React.useState<boolean>(false);
 
-  // Chakra UI teması için renkler (mevcut renk tanımlarına ek olarak)
   const bgResultBox = useColorModeValue("white", "gray.700");
   const hoverBgResultBox = useColorModeValue("gray.100", "gray.600");
   const textColorResultBox = useColorModeValue("gray.800", "white");
   const spinnerColor = useColorModeValue("teal.500", "blue.300");
   const infoTextColor = useColorModeValue("gray.500", "gray.400");
 
-  // Yeni uyarı mesajı renkleri
-  const warningBg = useColorModeValue("white", "gray.800"); // Beyaz arka plan (aydınlık mod) / Koyu gri (karanlık mod)
-  const warningTextColor = useColorModeValue("gray.800", "white"); // Siyah yazı (aydınlık mod) / Beyaz (karanlık mod)
+  const warningBg = useColorModeValue("white", "gray.800");
+  const warningTextColor = useColorModeValue("gray.800", "white");
 
 
   React.useEffect(() => {
@@ -143,38 +139,38 @@ const Navbar = React.memo(function Navbar({
     // 1 karakter kontrolü
     if (searchQuery.length === 1) {
       setShowMinCharWarning(true);
-      setShowSearchResults(false); // Sonuçları gizle
-      setSearchResults([]); // Önceki sonuçları temizle
+      setShowSearchResults(false);
+      setSearchResults([]);
       if (delayDebounceFnRef.current) {
-        clearTimeout(delayDebounceFnRef.current); // Önceki debounce'ı iptal et
+        clearTimeout(delayDebounceFnRef.current);
       }
-      return; // Daha fazla işlem yapma
+      return;
     } else {
-      setShowMinCharWarning(false); // Uyarıyı gizle
+      setShowMinCharWarning(false);
     }
 
     // 2+ karakter kontrolü ve debounce
     if (searchQuery.length > 1) {
       setLoadingSearch(true);
       if (delayDebounceFnRef.current) {
-        clearTimeout(delayDebounceFnRef.current); // Önceki debounce'ı iptal et
+        clearTimeout(delayDebounceFnRef.current);
       }
       delayDebounceFnRef.current = setTimeout(async () => {
         try {
           const BACKEND_URL = import.meta.env.VITE_API_BASE_URL;
           const response = await axios.get<NavbarSearchPostResult[]>(`${BACKEND_URL}/api/posts/search?q=${encodeURIComponent(searchQuery)}`);
           setSearchResults(response.data);
-          setShowSearchResults(true); // Sonuçlar geldiğinde göster
+          setShowSearchResults(true);
         } catch (error) {
           console.error("Arama hatası:", error);
           setSearchResults([]);
         } finally {
           setLoadingSearch(false);
         }
-      }, 500); // 500ms bekleme süresi
+      }, 500);
     } else {
-      setSearchResults([]); // Arama sorgusu boşsa sonuçları temizle
-      setShowSearchResults(false); // Sonuç kutusunu gizle
+      setSearchResults([]);
+      setShowSearchResults(false);
     }
 
     // Component unmount edildiğinde veya query değiştiğinde timeout'u temizle
@@ -195,17 +191,16 @@ const Navbar = React.memo(function Navbar({
   });
 
   // Bu handleSearch fonksiyonu, Enter'a basıldığında veya arama ikonuna basıldığında
-  // tam arama sayfası navigasyonu için kullanılacak.
   const handleSearch = (event?: React.FormEvent) => {
-    event?.preventDefault(); // Varsayılan form gönderimini engelle
-    if (searchQuery.trim().length > 1) { // En az 2 karakter kontrolü
+    event?.preventDefault();
+    if (searchQuery.trim().length > 1) {
       navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
-      setSearchQuery(""); // Arama sayfasına gittikten sonra arama kutusunu temizle
-      setSearchResults([]); // Sonuçları temizle
-      setShowSearchResults(false); // Sonuçları gizle
-      setShowMinCharWarning(false); // Uyarıyı gizle
+      setSearchQuery("");
+      setSearchResults([]);
+      setShowSearchResults(false);
+      setShowMinCharWarning(false);
     } else if (searchQuery.trim().length === 1) {
-      setShowMinCharWarning(true); // Eğer 1 karakterse uyarıyı göster
+      setShowMinCharWarning(true);
     }
   };
 
@@ -282,7 +277,7 @@ const Navbar = React.memo(function Navbar({
                 if (searchQuery.length === 1) {
                   setShowMinCharWarning(true);
                   setShowSearchResults(false); // Sonuçları gizle
-                } else if (searchResults.length > 0 && searchQuery.length > 1) { // Eğer sonuçlar varsa ve query > 1 ise göster
+                } else if (searchResults.length > 0 && searchQuery.length > 1) {
                   setShowSearchResults(true);
                 }
               }}
@@ -334,7 +329,7 @@ const Navbar = React.memo(function Navbar({
                         setSearchQuery("");
                         setSearchResults([]);
                         setShowSearchResults(false);
-                        setShowMinCharWarning(false); // Uyarıyı da kapat
+                        setShowMinCharWarning(false);
                       }}
                     >
                       <Text fontWeight="semibold" color={textColorResultBox} noOfLines={1}>
@@ -354,23 +349,23 @@ const Navbar = React.memo(function Navbar({
             </Box>
           )}
 
-          {/* Minimum Karakter Uyarısı - Güncellenen Stil */}
+          {/* Minimum Karakter Uyarısı */}
           {showMinCharWarning && (
             <Box
               position="absolute"
-              top="100%" // Input'un hemen altına konumlandır
+              top="100%"
               left="0"
               right="0"
-              mt={2} // Input ile arasında boşluk
-              px={3} // Yatay dolgu
-              py={2} // Dikey dolgu
-              bg={warningBg} // Arkaplan rengi
-              color={warningTextColor} // Yazı rengi
-              borderRadius="md" // Köşe yuvarlaklığı
-              boxShadow="md" // Hafif gölge
-              zIndex={100} // Diğer elementlerin üzerinde kalması için
-              textAlign="center" // Metni ortala
-              whiteSpace="nowrap" // Metni tek satırda tut
+              mt={2}
+              px={3}
+              py={2}
+              bg={warningBg}
+              color={warningTextColor}
+              borderRadius="md" 
+              boxShadow="md" 
+              zIndex={100}
+              textAlign="center"
+              whiteSpace="nowrap"
             >
               <Text fontWeight="semibold" fontSize="sm">
                 Arama yapmak için en az 2 karakter giriniz.

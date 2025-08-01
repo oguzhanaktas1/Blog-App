@@ -70,13 +70,10 @@ export const deleteAllNotifications = async (req: AuthRequest, res: Response, ne
       return next(error);
     }
 
-    // Use prisma.notification.deleteMany to delete all notifications
-    // where the receiverId matches the authenticated userId.
     const deleteResult = await prisma.notification.deleteMany({
       where: { receiverId: userId },
     });
 
-    // You can optionally return the count of deleted records
     res.json({ message: `All notifications (${deleteResult.count}) deleted successfully` });
   } catch (error) {
     next(error);

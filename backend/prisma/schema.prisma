@@ -25,10 +25,22 @@ model User {
   posts        Post[]
   comments     Comment[]
   likes        Like[]
-  images       Image[]   // Kullanıcının yüklediği resimler
+  images       Image[]
   reactions Reaction[]
   sentNotifications     Notification[] @relation("SentNotifications")
   receivedNotifications Notification[] @relation("ReceivedNotifications")
+  refreshTokens RefreshToken[]
+}
+
+model RefreshToken {
+  id        Int      @id @default(autoincrement())
+  token     String   @unique // The hashed refresh token, or the JTI if you store full token in client
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id])
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  revoked   Boolean  @default(false) // For revocation
+  jti       String?  @unique // JWT ID for specific token invalidation
 }
 
 model Post {
@@ -69,9 +81,9 @@ model Like {
 
 model Image {
   id        Int      @id @default(autoincrement())
-  url       String   // Görselin dosya yolu veya URL'si
-  userId    Int?     // Kullanıcıya ait olabilir
-  postId    Int?     // Gönderiye ait olabilir
+  url       String   
+  userId    Int?     
+  postId    Int?     
   user      User?    @relation(fields: [userId], references: [id])
   post      Post?    @relation(fields: [postId], references: [id])
   uploadedAt DateTime @default(now())
@@ -79,7 +91,7 @@ model Image {
 
 model Reaction {
   id        Int      @id @default(autoincrement())
-  type      String   // e.g. "like", "heart", "laugh", "angry"
+  type      String   
 
   user      User     @relation(fields: [userId], references: [id])
   userId    Int
@@ -92,12 +104,12 @@ model Reaction {
   
   createdAt DateTime @default(now())
 
-  @@unique([userId, postId, commentId, type]) // same user can't react twice to same post/comment with same type
+  @@unique([userId, postId, commentId, type])
 }
 
 model Notification {
   id          Int      @id @default(autoincrement())
-  type        String   // "mention", "comment", "like", "reaction" gibi
+  type        String  
 
   receiverId  Int
   receiver    User     @relation("ReceivedNotifications", fields: [receiverId], references: [id])
@@ -105,13 +117,13 @@ model Notification {
   senderId    Int
   sender      User     @relation("SentNotifications", fields: [senderId], references: [id])
 
-  postId      Int?     // Bildirim hangi gönderiyle ilgiliyse
+  postId      Int?     
   post        Post?    @relation(fields: [postId], references: [id])
 
-  commentId   Int?     // Bildirim bir yorumla ilgiliyse
+  commentId   Int?     
   comment     Comment? @relation(fields: [commentId], references: [id])
 
-  message     String?  // Gösterilecek mesaj (opsiyonel)
+  message     String?  
   read        Boolean  @default(false)
   createdAt   DateTime @default(now())
 }

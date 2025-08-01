@@ -6,7 +6,6 @@ const NotificationListener = () => {
   const toast = useToast();
 
   useEffect(() => {
-    // Mention event handler
     const handleMention = (data: { message: string; postId: number }) => {
       toast({
         title: "Mentioned!",
@@ -20,7 +19,7 @@ const NotificationListener = () => {
     socket.on("mention", handleMention);
 
     return () => {
-      socket.off("mention", handleMention); // cleanup
+      socket.off("mention", handleMention);
     };
   }, [toast]);
 

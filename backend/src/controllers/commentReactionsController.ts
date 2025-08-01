@@ -124,7 +124,6 @@ export const removeCommentReaction = async (req: AuthRequest, res: Response, nex
       return;
     }
 
-    // Tepki kaldırıldığında bildirim göndermiyoruz, sadece ekleme/güncelleme
     res.status(200).json({ message: "Tepki silindi." });
   } catch (error) {
     next(error);

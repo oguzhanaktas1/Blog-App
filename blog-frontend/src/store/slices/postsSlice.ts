@@ -68,8 +68,8 @@ export const updatePostThunk = createAsyncThunk<Post, { id: number; title: strin
 );
 
 export const deletePostThunk = createAsyncThunk<
-  number, // Dönen veri tipi (silen postId)
-  number, // Parametre olarak verilen postId
+  number,
+  number,
   { rejectValue: string }
 >("posts/deletePost", async (postId, { rejectWithValue }) => {
   try {
@@ -123,7 +123,7 @@ const postsSlice = createSlice({
             (p) => p.id === action.payload.id
           );
           if (index !== -1) {
-            state.posts[index] = action.payload; // güncel postu direkt store'da güncelle
+            state.posts[index] = action.payload;
           }
         }
       )
@@ -135,7 +135,7 @@ const postsSlice = createSlice({
 });
 
 export default postsSlice.reducer;
-// postsSlice.ts dosyasının en altına ekle
+
 export const selectPosts = (state: RootState) => state.posts.posts;
 export const selectPostsLoading = (state: RootState) => state.posts.loading;
 export const selectPostsError = (state: RootState) => state.posts.error;

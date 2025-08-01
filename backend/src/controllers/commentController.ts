@@ -3,7 +3,7 @@ import { prisma } from "../prisma/client";
 import type { AuthRequest } from "../middlewares/authMiddleware";
 import { extractMentions } from "../utils/mentionParser";
 import { connectedUsers, io, onlineUsers } from "../socket";
-import { notifyUser } from "../utils/notifyUser"; // notifyUser fonksiyonunu içe aktar
+import { notifyUser } from "../utils/notifyUser";
 
 export const getCommentsByPost = async (
   req: Request,
@@ -80,10 +80,10 @@ export const addComment = async (
         authorId: userId,
       },
       include: {
-        author: true, // yorumu yapan kullanıcı bilgisi
+        author: true,
         post: {
           include: {
-            author: true, // postun sahibi
+            author: true,
           },
         },
       },
@@ -129,16 +129,14 @@ export const addComment = async (
         {
           postId: postId,
           commentId: newComment.id,
-          type: "mention", // Bildirim tipi: mention
-          senderId: userId, // Yorumu yapan kullanıcı
+          type: "mention",
+          senderId: userId,
         }
       );
 
-      // Socket.io üzerinden anlık bildirim gönder (zaten vardı, mesajı güncelledik)
-      // connectedUsers yerine onlineUsers kullanılıyor, bu daha doğru
       const mentionedUserSocketId = onlineUsers.get(String(mentionedUser.id));
       if (mentionedUserSocketId) {
-        io.to(mentionedUserSocketId).emit("newNotification", { // 'mention' yerine 'newNotification' kullanılması daha tutarlı
+        io.to(mentionedUserSocketId).emit("newNotification", {
           message: mentionNotificationMessage,
           postId: postId,
           commentId: newComment.id,
@@ -148,7 +146,6 @@ export const addComment = async (
       }
     }
 
-    // Post sahibine yorum yapıldığında bildirim gönder (mevcut mantık)
     const postOwnerId = newComment.post.authorId;
 
     if (postOwnerId !== userId) {
@@ -160,8 +157,8 @@ export const addComment = async (
         {
           postId: newComment.post.id,
           commentId: newComment.id,
-          type: "comment", // Bildirim tipi: comment
-          senderId: userId, // Yorumu yapan kullanıcı
+          type: "comment",
+          senderId: userId,
         }
       );
     }

@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from "express";
-import { prisma } from "../prisma/client"; // kendi prisma client yolunu kullan
+import { prisma } from "../prisma/client";
 
 export const uploadProfilePhoto = async (
   req: Request,
@@ -25,7 +25,6 @@ export const uploadProfilePhoto = async (
     });
     res.json({ imageUrl });
   } catch (error) {
-    // Prisma hatalarını doğrudan next(error) ile ilet
     next(error);
   }
 };

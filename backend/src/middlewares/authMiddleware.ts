@@ -1,6 +1,5 @@
 import { Request, Response, NextFunction } from "express";
 import jwt, { JwtPayload } from "jsonwebtoken";
-import { prisma } from "../prisma/client";
 
 const JWT_SECRET = process.env.JWT_SECRET;
 if (!JWT_SECRET) {
@@ -85,7 +84,7 @@ export const authorizeRole = (role: string) => {
     }
 
     try {
-      const decoded = jwt.verify(token, JWT_SECRET as string) as TokenPayload; // Apply the same fix here
+      const decoded = jwt.verify(token, JWT_SECRET as string) as TokenPayload;
       if (decoded.role !== role) {
         return next({ status: 403, message: "Yetkisiz erişim" });
       }
